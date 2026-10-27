@@ -1,15 +1,20 @@
 # Entity relationship design
 
-Stub — expand during M1+ as models land.
+## Core entities
 
-## Core entities (planned)
-
-- **User** — Django `AUTH_USER_MODEL` (custom, email-first)
-- **Workspace** — tenant boundary (`slug` unique)
-- **WorkspaceMembership** — user ↔ workspace + role/status
+- **User** — Django `AUTH_USER_MODEL` (email-first)
+- **Workspace** — tenant boundary (`slug` unique, UUID PK)
+- **WorkspaceMembership** — user ↔ workspace + role/status (`owner|admin|project_manager|member|viewer`)
 - **Project** — belongs to one workspace (`key` unique per workspace)
-- **Task** — belongs to one project; status, priority, assignee, position
-- **Comment** — belongs to one task
-- **ActivityEvent** — workspace-scoped timeline entries
+- **Task** — belongs to one project; status, priority, assignee, fractional `position`, numeric `number` → `{KEY}-{n}`
+- **Comment** — belongs to one task (soft delete via `deleted_at`)
+- **ActivityEvent** — workspace-scoped timeline entries (sanitized JSON metadata)
 
-See the PRD §10 for fields, constraints, and relationship rules.
+## Relationships
+
+```
+User 1─* WorkspaceMembership *─1 Workspace
+Workspace 1─* Project 1─* Task 1─* Comment
+Workspace 1─* ActivityEvent
+User optionally assigned to Task / lead of Project / actor on ActivityEvent
+```
