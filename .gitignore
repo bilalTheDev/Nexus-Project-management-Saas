@@ -24,6 +24,9 @@ secrets.json
 .agents/
 skills-lock.json
 .neon/
+/neon.ts
+/package.json
+/package-lock.json
 
 # Python
 __pycache__/
