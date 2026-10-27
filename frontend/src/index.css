@@ -1,21 +1,98 @@
 @import 'tailwindcss';
 
+/* Themeable tokens — light defaults, overridden by [data-theme="dark"] */
+:root {
+  color-scheme: light;
+
+  --nexus-paper: #f4f2eb;
+  --nexus-surface: #ffffff;
+  --nexus-surface-low: #ebe8e0;
+  --nexus-ink: #0d1218;
+  --nexus-ink-secondary: #3d4752;
+  --nexus-ink-muted: #5c6670;
+  --nexus-border: #d8d5cc;
+  --nexus-border-strong: #c4c1b6;
+  --nexus-brand: #2a6b66;
+  --nexus-mint: #dcebe5;
+  --nexus-status-backlog: #4b5563;
+  --nexus-status-todo: #1d4ed8;
+  --nexus-status-progress: #0f766e;
+  --nexus-status-review: #b45309;
+  --nexus-status-done: #15803d;
+
+  --nexus-page-gradient: linear-gradient(
+    165deg,
+    #f7f4ec 0%,
+    #eef3f0 38%,
+    #e6ebe8 68%,
+    #f2efe6 100%
+  );
+  --nexus-hero-glow: radial-gradient(
+      ellipse 80% 55% at 50% -8%,
+      rgba(42, 107, 102, 0.18),
+      transparent 58%
+    ),
+    linear-gradient(180deg, #f7f4ec 0%, #e8efe9 55%, transparent 100%);
+  --nexus-dot-grid: rgba(13, 18, 24, 0.07);
+  --nexus-nav-scrolled: rgba(244, 242, 235, 0.9);
+  --nexus-ink-hover: #1a2430;
+  --nexus-shadow: rgba(13, 18, 24, 0.18);
+}
+
+[data-theme='dark'] {
+  color-scheme: dark;
+
+  --nexus-paper: #0c1016;
+  --nexus-surface: #151a22;
+  --nexus-surface-low: #1b222c;
+  --nexus-ink: #f3f1ea;
+  --nexus-ink-secondary: #c2c7ce;
+  --nexus-ink-muted: #8b939c;
+  --nexus-border: #2a3340;
+  --nexus-border-strong: #3a4554;
+  --nexus-brand: #5bb3ab;
+  --nexus-mint: #1a2f2c;
+  --nexus-status-backlog: #94a3b8;
+  --nexus-status-todo: #60a5fa;
+  --nexus-status-progress: #2dd4bf;
+  --nexus-status-review: #fbbf24;
+  --nexus-status-done: #4ade80;
+
+  --nexus-page-gradient: linear-gradient(
+    165deg,
+    #0a0e14 0%,
+    #101820 36%,
+    #0e1716 70%,
+    #0c1016 100%
+  );
+  --nexus-hero-glow: radial-gradient(
+      ellipse 80% 55% at 50% -8%,
+      rgba(91, 179, 171, 0.16),
+      transparent 58%
+    ),
+    linear-gradient(180deg, #0c1016 0%, #111a1c 55%, transparent 100%);
+  --nexus-dot-grid: rgba(243, 241, 234, 0.05);
+  --nexus-nav-scrolled: rgba(12, 16, 22, 0.88);
+  --nexus-ink-hover: #e8e4da;
+  --nexus-shadow: rgba(0, 0, 0, 0.45);
+}
+
 @theme {
-  --color-paper: #faf9f5;
-  --color-surface: #ffffff;
-  --color-surface-low: #f5f4f0;
-  --color-ink: #202a35;
-  --color-ink-secondary: #727b83;
-  --color-ink-muted: #969da3;
-  --color-border: #e6e5e0;
-  --color-border-strong: #d5d7d2;
-  --color-brand: #347d78;
-  --color-mint: #e5f1ec;
-  --color-status-backlog: #64748b;
-  --color-status-todo: #2563eb;
-  --color-status-progress: #0d9488;
-  --color-status-review: #d97706;
-  --color-status-done: #16a34a;
+  --color-paper: var(--nexus-paper);
+  --color-surface: var(--nexus-surface);
+  --color-surface-low: var(--nexus-surface-low);
+  --color-ink: var(--nexus-ink);
+  --color-ink-secondary: var(--nexus-ink-secondary);
+  --color-ink-muted: var(--nexus-ink-muted);
+  --color-border: var(--nexus-border);
+  --color-border-strong: var(--nexus-border-strong);
+  --color-brand: var(--nexus-brand);
+  --color-mint: var(--nexus-mint);
+  --color-status-backlog: var(--nexus-status-backlog);
+  --color-status-todo: var(--nexus-status-todo);
+  --color-status-progress: var(--nexus-status-progress);
+  --color-status-review: var(--nexus-status-review);
+  --color-status-done: var(--nexus-status-done);
 
   --font-display: 'Newsreader', Georgia, 'Times New Roman', serif;
   --font-sans: 'Manrope', system-ui, sans-serif;
@@ -32,11 +109,16 @@
     min-width: 320px;
     min-height: 100vh;
     font-family: var(--font-sans);
-    color: var(--color-ink);
-    background-color: var(--color-paper);
+    color: var(--nexus-ink);
+    background-color: var(--nexus-paper);
+    background-image: var(--nexus-page-gradient);
+    background-attachment: fixed;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    transition:
+      background-color 0.25s ease,
+      color 0.25s ease;
   }
 
   #root {
@@ -44,8 +126,8 @@
   }
 
   ::selection {
-    background: var(--color-mint);
-    color: var(--color-ink);
+    background: var(--nexus-mint);
+    color: var(--nexus-ink);
   }
 
   a {
@@ -77,8 +159,43 @@
   }
 
   .focus-ring:focus-visible {
-    outline: 2px solid var(--color-brand);
+    outline: 2px solid var(--nexus-brand);
     outline-offset: 2px;
+  }
+
+  .bg-page {
+    background-color: var(--nexus-paper);
+    background-image: var(--nexus-page-gradient);
+    background-attachment: fixed;
+  }
+
+  .hero-atmosphere {
+    background-image: var(--nexus-hero-glow);
+  }
+
+  .hero-dot-grid {
+    background-image: radial-gradient(
+      circle at 1px 1px,
+      var(--nexus-dot-grid) 1px,
+      transparent 0
+    );
+    background-size: 22px 22px;
+  }
+
+  .nav-scrolled {
+    background-color: var(--nexus-nav-scrolled);
+  }
+
+  .shadow-soft {
+    box-shadow: 0 30px 80px -40px var(--nexus-shadow);
+  }
+
+  .shadow-panel {
+    box-shadow: 0 20px 50px -36px var(--nexus-shadow);
+  }
+
+  .btn-primary-hover:hover {
+    background-color: var(--nexus-ink-hover);
   }
 }
 

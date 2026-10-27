@@ -6,14 +6,18 @@ Environment-driven configuration for local development and production
 """
 
 from pathlib import Path
+import sys
 
 import dj_database_url
 from dotenv import load_dotenv
 import os
 
-load_dotenv()
-
 BASE_DIR = Path(__file__).resolve().parent.parent
+REPO_ROOT = BASE_DIR.parent
+
+# Load Neon-managed vars from repo root (.env.local), then backend/.env overrides.
+load_dotenv(REPO_ROOT / ".env.local")
+load_dotenv(BASE_DIR / ".env", override=True)
 
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "django-insecure-dev-only-change-me")
 DEBUG = os.getenv("DJANGO_DEBUG", "True").lower() in ("1", "true", "yes")
@@ -35,6 +39,7 @@ INSTALLED_APPS = [
     "django_filters",
     "rest_framework",
     "rest_framework_simplejwt",
+    "rest_framework_simplejwt.token_blacklist",
     "drf_spectacular",
     # Local apps
     "apps.accounts",
@@ -75,15 +80,21 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "config.wsgi.application"
 
-# Database: DATABASE_URL (Postgres/Neon) when set; otherwise local SQLite for bootstrap.
-DATABASE_URL = os.getenv("DATABASE_URL")
+# Neon Postgres: pooled DATABASE_URL for app traffic; direct UNPOOLED for migrations.
+# See neon-postgres skill: migrations must use the non-pooler connection.
+_migration_cmds = {"migrate", "makemigrations", "showmigrations", "sqlmigrate"}
+_is_migration = any(arg in _migration_cmds for arg in sys.argv)
+_pooled = os.getenv("DATABASE_URL")
+_unpooled = os.getenv("DATABASE_URL_UNPOOLED")
+DATABASE_URL = (_unpooled if _is_migration and _unpooled else None) or _pooled or _unpooled
+_ssl_require = os.getenv("DATABASE_SSL_REQUIRE", "True").lower() in ("1", "true", "yes")
+
 if DATABASE_URL:
     DATABASES = {
         "default": dj_database_url.parse(
             DATABASE_URL,
-            conn_max_age=600,
-            ssl_require=os.getenv("DATABASE_SSL_REQUIRE", "False").lower()
-            in ("1", "true", "yes"),
+            conn_max_age=0 if _is_migration else 600,
+            ssl_require=_ssl_require,
         )
     }
 else:
@@ -118,6 +129,7 @@ CORS_ALLOWED_ORIGINS = [
     for origin in os.getenv("CORS_ALLOWED_ORIGINS", "http://localhost:5173").split(",")
     if origin.strip()
 ]
+CORS_ALLOW_CREDENTIALS = True
 CSRF_TRUSTED_ORIGINS = [
     origin.strip()
     for origin in os.getenv("CSRF_TRUSTED_ORIGINS", "http://localhost:5173").split(",")
@@ -139,7 +151,26 @@ REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 20,
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    "DEFAULT_THROTTLE_CLASSES": (
+        "rest_framework.throttling.ScopedRateThrottle",
+    ),
+    "DEFAULT_THROTTLE_RATES": {
+        "auth": "30/minute",
+    },
 }
+
+from datetime import timedelta  # noqa: E402
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+    "ROTATE_REFRESH_TOKENS": False,
+    "BLACKLIST_AFTER_ROTATION": True,
+    "UPDATE_LAST_LOGIN": True,
+    "AUTH_HEADER_TYPES": ("Bearer",),
+}
+
+JWT_REFRESH_COOKIE_NAME = "nexus_refresh"
 
 SPECTACULAR_SETTINGS = {
     "TITLE": "Nexus API",

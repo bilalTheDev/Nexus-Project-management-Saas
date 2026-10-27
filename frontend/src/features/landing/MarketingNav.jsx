@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Menu, X } from 'lucide-react'
 import { NexusLogo } from '@/components/NexusLogo'
+import { ThemeToggle } from '@/components/ThemeToggle'
 import { Button } from '@/components/ui/Button'
 
 const links = [
@@ -27,8 +28,8 @@ export function MarketingNav() {
     <header
       className={`sticky top-0 z-50 border-b transition-colors ${
         scrolled
-          ? 'border-border bg-[rgba(250,249,245,0.88)] backdrop-blur-md'
-          : 'border-transparent bg-paper/70 backdrop-blur-sm'
+          ? 'border-border nav-scrolled backdrop-blur-md'
+          : 'border-transparent bg-paper/60 backdrop-blur-sm'
       }`}
     >
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
@@ -41,7 +42,7 @@ export function MarketingNav() {
             <a
               key={link.href}
               href={link.href}
-              className="rounded text-sm font-medium text-ink-secondary transition-colors hover:text-ink focus-ring"
+              className="rounded text-sm font-semibold text-ink-secondary transition-colors hover:text-ink focus-ring"
             >
               {link.label}
             </a>
@@ -49,35 +50,39 @@ export function MarketingNav() {
         </nav>
 
         <div className="hidden items-center gap-2 md:flex">
+          <ThemeToggle />
           <Button to="/login" variant="ghost" className="px-3">
             Sign in
           </Button>
           <Button to="/signup">Get started</Button>
         </div>
 
-        <button
-          type="button"
-          className="inline-flex items-center justify-center rounded-lg border border-border bg-surface p-2 text-ink focus-ring md:hidden"
-          aria-expanded={open}
-          aria-controls="mobile-nav"
-          aria-label={open ? 'Close menu' : 'Open menu'}
-          onClick={() => setOpen((v) => !v)}
-        >
-          {open ? <X size={18} /> : <Menu size={18} />}
-        </button>
+        <div className="flex items-center gap-2 md:hidden">
+          <ThemeToggle />
+          <button
+            type="button"
+            className="inline-flex items-center justify-center rounded-lg border border-border bg-surface p-2 text-ink focus-ring"
+            aria-expanded={open}
+            aria-controls="mobile-nav"
+            aria-label={open ? 'Close menu' : 'Open menu'}
+            onClick={() => setOpen((v) => !v)}
+          >
+            {open ? <X size={18} /> : <Menu size={18} />}
+          </button>
+        </div>
       </div>
 
       {open ? (
         <div
           id="mobile-nav"
-          className="border-t border-border bg-paper px-4 py-4 md:hidden"
+          className="border-t border-border bg-paper/95 px-4 py-4 backdrop-blur md:hidden"
         >
           <nav className="flex flex-col gap-1" aria-label="Mobile">
             {links.map((link) => (
               <a
                 key={link.href}
                 href={link.href}
-                className="rounded-lg px-3 py-2.5 text-sm font-medium text-ink-secondary hover:bg-surface-low hover:text-ink"
+                className="rounded-lg px-3 py-2.5 text-sm font-semibold text-ink-secondary hover:bg-surface-low hover:text-ink"
                 onClick={() => setOpen(false)}
               >
                 {link.label}
