@@ -44,7 +44,7 @@ export function LoginPage() {
   })
 
   if (!bootstrapping && isAuthenticated) {
-    return <Navigate to="/app/workspaces/new" replace />
+    return <Navigate to="/app" replace />
   }
 
   async function completeLogin(email, password) {
