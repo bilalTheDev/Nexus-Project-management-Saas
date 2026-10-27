@@ -77,7 +77,9 @@ class EmailTokenObtainPairSerializer(TokenObtainPairSerializer):
         attrs[self.username_field] = attrs.get("email", "").lower().strip()
         data = super().validate(attrs)
         data["user"] = UserSerializer(self.user).data
-        data["default_workspace"] = None
+        from apps.workspaces.permissions import default_workspace_slug
+
+        data["default_workspace"] = default_workspace_slug(self.user)
         return data
 
 

@@ -36,11 +36,13 @@ class RegisterView(generics.CreateAPIView):
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
         refresh = RefreshToken.for_user(user)
+        from apps.workspaces.permissions import default_workspace_slug
+
         response = Response(
             {
                 "access": str(refresh.access_token),
                 "user": UserSerializer(user).data,
-                "default_workspace": None,
+                "default_workspace": default_workspace_slug(user),
             },
             status=status.HTTP_201_CREATED,
         )
