@@ -11,12 +11,12 @@ import { Button } from '@/components/ui/Button'
 const DEMO_USERS = [
   {
     label: 'Maya Lin (Lead Owner)',
-    email: 'maya@northstar.dev',
+    email: 'maya@northstar.studio',
     password: 'DemoPass1',
   },
   {
     label: 'Daniel Vance (Developer)',
-    email: 'daniel@northstar.dev',
+    email: 'daniel@northstar.studio',
     password: 'DemoPass1',
   },
 ]

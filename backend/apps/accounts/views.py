@@ -96,9 +96,13 @@ class LogoutView(APIView):
 
 
 class CookieTokenRefreshView(APIView):
+    """Rotate refresh tokens and rewrite the HttpOnly cookie (NEX-124)."""
+
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
+        from django.conf import settings as django_settings
+
         raw = request.COOKIES.get(REFRESH_COOKIE_NAME)
         if not raw:
             return Response(
@@ -108,6 +112,17 @@ class CookieTokenRefreshView(APIView):
         try:
             refresh = RefreshToken(raw)
             access = str(refresh.access_token)
+
+            if django_settings.SIMPLE_JWT.get("ROTATE_REFRESH_TOKENS", False):
+                if django_settings.SIMPLE_JWT.get("BLACKLIST_AFTER_ROTATION", False):
+                    try:
+                        refresh.blacklist()
+                    except AttributeError:
+                        pass
+                refresh.set_jti()
+                refresh.set_exp()
+                refresh.set_iat()
+
             response = Response({"access": access}, status=status.HTTP_200_OK)
             set_refresh_cookie(response, refresh)
             return response
