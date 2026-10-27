@@ -84,7 +84,7 @@ export function AppPreview() {
         aria-hidden="true"
       />
 
-      <div className="relative overflow-hidden rounded-2xl border border-border bg-surface shadow-[0_30px_80px_-40px_rgba(32,42,53,0.45)]">
+      <div className="relative overflow-hidden rounded-2xl border border-border bg-surface shadow-soft">
         <div className="flex items-center gap-2 border-b border-border bg-surface-low px-4 py-3">
           <span className="size-2.5 rounded-full bg-[#E07A5F]" />
           <span className="size-2.5 rounded-full bg-[#F2CC8F]" />

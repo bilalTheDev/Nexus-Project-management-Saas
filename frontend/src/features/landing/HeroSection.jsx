@@ -6,16 +6,11 @@ export function HeroSection() {
   return (
     <section className="relative overflow-hidden border-b border-border">
       <div
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-10%,_rgba(229,241,236,0.9),_transparent_60%),linear-gradient(180deg,_#FAF9F5_0%,_#F5F4F0_100%)]"
+        className="pointer-events-none absolute inset-0 hero-atmosphere"
         aria-hidden="true"
       />
       <div
-        className="pointer-events-none absolute inset-0 opacity-[0.35]"
-        style={{
-          backgroundImage:
-            'radial-gradient(circle at 1px 1px, rgba(32,42,53,0.06) 1px, transparent 0)',
-          backgroundSize: '22px 22px',
-        }}
+        className="pointer-events-none absolute inset-0 opacity-60 hero-dot-grid"
         aria-hidden="true"
       />
 
@@ -29,11 +24,11 @@ export function HeroSection() {
             Good work moves forward.
           </h1>
 
-          <p className="animate-fade-up-delay-1 mt-5 font-display text-xl italic text-ink-secondary sm:text-2xl">
+          <p className="animate-fade-up-delay-1 mt-5 font-display text-xl italic text-ink sm:text-2xl">
             Clear ownership. Fluid execution. Zero ambient panic.
           </p>
 
-          <p className="animate-fade-up-delay-2 mx-auto mt-5 max-w-2xl text-base leading-relaxed text-ink-secondary sm:text-lg">
+          <p className="animate-fade-up-delay-2 mx-auto mt-5 max-w-2xl text-base font-medium leading-relaxed text-ink-secondary sm:text-lg">
             Nexus gives small teams a calm place to plan projects, assign work,
             discuss tasks, and see what is progressing — without the ambient
             noise of bloated project tools.

@@ -82,7 +82,7 @@ export function WorkflowTabs() {
             role="tabpanel"
             id={`panel-${active}`}
             aria-labelledby={`tab-${active}`}
-            className="rounded-2xl border border-border bg-surface p-5 shadow-[0_20px_50px_-36px_rgba(32,42,53,0.35)] sm:p-6"
+            className="rounded-2xl border border-border bg-surface p-5 shadow-panel sm:p-6"
           >
             <div className="mb-5 flex flex-wrap items-center justify-between gap-3 border-b border-border pb-4">
               <div>

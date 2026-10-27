@@ -9,7 +9,7 @@ import { MarketingFooter } from './MarketingFooter'
 
 export function LandingPage() {
   return (
-    <div className="min-h-screen bg-paper text-ink">
+    <div className="min-h-screen bg-page text-ink">
       <MarketingNav />
       <main>
         <HeroSection />
