@@ -8,11 +8,22 @@ venv/
 
 # Environment / secrets
 .env
+.env.*
+!.env.example
+!**/.env.example
 .env.local
 .env.*.local
 frontend/.env
 backend/.env
 *.pem
+*.key
+credentials.json
+secrets.json
+
+# Local agent / Neon tooling (not app source)
+.agents/
+skills-lock.json
+.neon/
 
 # Python
 __pycache__/
@@ -50,3 +61,4 @@ npm-debug.log*
 .turbo/
 .cache/
 prompts/
+.neon
