@@ -1,0 +1,52 @@
+# Dependencies
+node_modules/
+frontend/node_modules/
+backend/.venv/
+backend/venv/
+.venv/
+venv/
+
+# Environment / secrets
+.env
+.env.local
+.env.*.local
+frontend/.env
+backend/.env
+*.pem
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+backend/db.sqlite3
+backend/staticfiles/
+*.sqlite3
+
+# Build / coverage
+frontend/dist/
+frontend/coverage/
+dist/
+build/
+coverage/
+htmlcov/
+.coverage
+
+# IDE / OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Misc
+.turbo/
+.cache/
+prompts/
