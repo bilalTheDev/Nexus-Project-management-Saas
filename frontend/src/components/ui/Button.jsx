@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 
 const variants = {
   primary:
-    'bg-ink text-paper hover:bg-[#263B4A] border border-transparent shadow-sm',
+    'bg-ink text-paper btn-primary-hover border border-transparent shadow-sm',
   secondary:
     'bg-surface text-ink border border-border hover:border-border-strong hover:bg-surface-low',
   ghost:

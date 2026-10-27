@@ -76,21 +76,22 @@ export function EngineeringSection() {
           </ul>
         </div>
 
-        <div className="overflow-hidden rounded-2xl border border-[#2a3542] bg-ink shadow-[0_24px_60px_-30px_rgba(32,42,53,0.55)]">
+        {/* Terminal chrome stays dark in both themes for readable code contrast */}
+        <div className="overflow-hidden rounded-2xl border border-[#2a3542] bg-[#141b24] shadow-soft">
           <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
             <div className="flex items-center gap-2">
               <span className="size-2.5 rounded-full bg-[#E07A5F]" />
               <span className="size-2.5 rounded-full bg-[#F2CC8F]" />
               <span className="size-2.5 rounded-full bg-[#81B29A]" />
             </div>
-            <p className="font-mono text-[10px] text-white/50">
+            <p className="font-mono text-[10px] text-white/55">
               GET /api/v1/workspaces/ws_northstar/activity/
             </p>
           </div>
-          <pre className="overflow-x-auto p-4 font-mono text-[11px] leading-relaxed text-[#C8D4C4] sm:text-xs">
+          <pre className="overflow-x-auto p-4 font-mono text-[11px] leading-relaxed text-[#d5e4d8] sm:text-xs">
             <code>{sampleJson}</code>
           </pre>
-          <div className="border-t border-white/10 px-4 py-3 font-mono text-[10px] text-white/45">
+          <div className="border-t border-white/10 px-4 py-3 font-mono text-[10px] text-white/50">
             POST /api/v1/tasks/NEX-104/position/ · {'{ status, position }'}
           </div>
         </div>
