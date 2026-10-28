@@ -9,8 +9,8 @@ const baseURL =
 
 export const api = axios.create({
   baseURL,
-  // Neon round-trips can be slow on cold connections.
-  timeout: 30000,
+  // Neon + template seeding can exceed 30s on cold connections.
+  timeout: 60000,
   headers: {
     'Content-Type': 'application/json',
     // CSRF defence for cookie-authenticated auth endpoints (refresh/logout).

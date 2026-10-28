@@ -83,9 +83,11 @@ export function ProjectCreatePage() {
           detail?.default_assignee_id?.[0] ||
           detail?.detail ||
           firstFieldError ||
-          (!err.response
-            ? 'Cannot reach the API. Is the backend running?'
-            : 'Could not create project.'),
+          (err.code === 'ECONNABORTED' || /timeout/i.test(err.message || '')
+            ? 'Project create timed out. The API is slow right now — try Open board again.'
+            : !err.response
+              ? 'Cannot reach the API. Is the backend running on port 8000?'
+              : 'Could not create project.'),
       )
     },
   })

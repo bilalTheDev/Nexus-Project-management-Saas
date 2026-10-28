@@ -21,7 +21,10 @@ export function fetchProjects(slug, params = {}) {
 }
 
 export function createProject(slug, payload) {
-  return api.post(`/workspaces/${slug}/projects/`, payload).then((r) => r.data)
+  // Template seeding hits Neon several times; allow a long window.
+  return api
+    .post(`/workspaces/${slug}/projects/`, payload, { timeout: 90000 })
+    .then((r) => r.data)
 }
 
 export function fetchProject(slug, projectKey) {
