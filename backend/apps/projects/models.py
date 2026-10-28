@@ -31,6 +31,9 @@ class Project(models.Model):
         choices=Status.choices,
         default=Status.PLANNING,
     )
+    # Fixture key: scrum | kanban | bug_tracking
+    template_key = models.CharField(max_length=32, blank=True, default="scrum")
+    board_config = models.JSONField(default=dict, blank=True)
     start_date = models.DateField(null=True, blank=True)
     due_date = models.DateField(null=True, blank=True)
     lead = models.ForeignKey(
@@ -39,6 +42,13 @@ class Project(models.Model):
         null=True,
         blank=True,
         related_name="led_projects",
+    )
+    default_assignee = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="default_assignee_projects",
     )
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -64,3 +74,8 @@ class Project(models.Model):
 
     def __str__(self) -> str:
         return f"{self.key} — {self.name}"
+
+
+# Re-export workflow / sprint models for convenient imports.
+from apps.projects.workflow_models import IssueType, Transition, WorkflowStatus  # noqa: E402,F401
+from apps.projects.sprint_models import Sprint  # noqa: E402,F401

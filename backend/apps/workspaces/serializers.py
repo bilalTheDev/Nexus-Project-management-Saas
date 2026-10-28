@@ -20,6 +20,8 @@ class WorkspaceSerializer(serializers.ModelSerializer):
             "id",
             "name",
             "slug",
+            "team_type",
+            "timezone",
             "created_by",
             "created_at",
             "updated_at",
@@ -67,6 +69,11 @@ class WorkspaceSerializer(serializers.ModelSerializer):
 class WorkspaceCreateSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=120)
     slug = serializers.SlugField(max_length=80, required=False, allow_blank=True)
+    team_type = serializers.ChoiceField(
+        choices=Workspace.TeamType.choices,
+        required=False,
+        default=Workspace.TeamType.SOFTWARE,
+    )
 
     def validate_slug(self, value):
         slug = (value or "").strip().lower()
@@ -80,6 +87,7 @@ class WorkspaceCreateSerializer(serializers.Serializer):
         user = self.context["request"].user
         name = validated_data["name"].strip()
         slug = validated_data.get("slug") or slugify(name)
+        team_type = validated_data.get("team_type") or Workspace.TeamType.SOFTWARE
         if not slug:
             raise serializers.ValidationError({"slug": "Could not derive a valid slug."})
         base = slug
@@ -88,7 +96,9 @@ class WorkspaceCreateSerializer(serializers.Serializer):
             slug = f"{base}-{counter}"
             counter += 1
 
-        workspace = Workspace.objects.create(name=name, slug=slug, created_by=user)
+        workspace = Workspace.objects.create(
+            name=name, slug=slug, team_type=team_type, created_by=user
+        )
         WorkspaceMembership.objects.create(
             workspace=workspace,
             user=user,
@@ -96,6 +106,9 @@ class WorkspaceCreateSerializer(serializers.Serializer):
             status=WorkspaceMembership.Status.ACTIVE,
             joined_at=timezone.now(),
         )
+        from apps.accounts.onboarding import get_or_create_onboarding
+
+        get_or_create_onboarding(user, workspace)
         return workspace
 
 

@@ -17,6 +17,7 @@ class ActivityEvent(models.Model):
         TASK_STATUS_CHANGED = "task_status_changed", "Task Status Changed"
         TASK_ASSIGNED = "task_assigned", "Task Assigned"
         COMMENT_ADDED = "comment_added", "Comment Added"
+        MENTIONED = "mentioned", "Mentioned"
         PROJECT_CREATED = "project_created", "Project Created"
         PROJECT_UPDATED = "project_updated", "Project Updated"
         MEMBER_ADDED = "member_added", "Member Added"

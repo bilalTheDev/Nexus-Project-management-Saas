@@ -1,7 +1,13 @@
 from django.urls import path
 
 from apps.tasks.views import (
+    BacklogView,
     BoardTasksView,
+    BulkIssueUpdateView,
+    IssueHistoryView,
+    IssueLinkListCreateView,
+    IssueRankView,
+    IssueTransitionsView,
     MyTasksView,
     ProjectTaskListCreateView,
     TaskDetailView,
@@ -15,19 +21,65 @@ urlpatterns = [
         name="project-tasks",
     ),
     path(
+        "workspaces/<slug:slug>/projects/<str:project_key>/issues/",
+        ProjectTaskListCreateView.as_view(),
+        name="project-issues",
+    ),
+    path(
         "workspaces/<slug:slug>/projects/<str:project_key>/board/",
         BoardTasksView.as_view(),
         name="project-board",
+    ),
+    path(
+        "workspaces/<slug:slug>/projects/<str:project_key>/backlog/",
+        BacklogView.as_view(),
+        name="project-backlog",
+    ),
+    path(
+        "workspaces/<slug:slug>/projects/<str:project_key>/issues/bulk/",
+        BulkIssueUpdateView.as_view(),
+        name="project-issues-bulk",
     ),
     path(
         "workspaces/<slug:slug>/my-tasks/",
         MyTasksView.as_view(),
         name="my-tasks",
     ),
+    path(
+        "workspaces/<slug:slug>/my-issues/",
+        MyTasksView.as_view(),
+        name="my-issues",
+    ),
     path("tasks/<uuid:task_id>/", TaskDetailView.as_view(), name="task-detail"),
+    path("issues/<uuid:task_id>/", TaskDetailView.as_view(), name="issue-detail"),
     path(
         "tasks/<uuid:task_id>/position/",
         TaskPositionView.as_view(),
         name="task-position",
+    ),
+    path(
+        "issues/<uuid:task_id>/position/",
+        TaskPositionView.as_view(),
+        name="issue-position",
+    ),
+    path(
+        "issues/<uuid:task_id>/transitions/",
+        IssueTransitionsView.as_view(),
+        name="issue-transitions",
+    ),
+    path(
+        "issues/<uuid:task_id>/history/",
+        IssueHistoryView.as_view(),
+        name="issue-history",
+    ),
+    path(
+        "issues/<uuid:task_id>/links/",
+        IssueLinkListCreateView.as_view(),
+        name="issue-links",
+    ),
+    path(
+        "issues/<uuid:task_id>/rank/",
+        IssueRankView.as_view(),
+        name="issue-rank",
     ),
 ]

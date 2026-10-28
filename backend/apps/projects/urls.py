@@ -1,12 +1,27 @@
 from django.urls import path
 
 from apps.projects.views import (
+    OnboardingView,
     ProjectArchiveView,
     ProjectDetailView,
+    ProjectKeyCheckView,
     ProjectListCreateView,
+    ProjectStatusCreateView,
+    ProjectTemplateListView,
+    ProjectTransitionCreateView,
+    ProjectWorkflowView,
+    SprintCompleteView,
+    SprintListCreateView,
+    SprintStartView,
 )
 
 urlpatterns = [
+    path("project-templates/", ProjectTemplateListView.as_view(), name="project-templates"),
+    path(
+        "workspaces/<slug:slug>/projects/key-check/",
+        ProjectKeyCheckView.as_view(),
+        name="project-key-check",
+    ),
     path(
         "workspaces/<slug:slug>/projects/",
         ProjectListCreateView.as_view(),
@@ -21,5 +36,40 @@ urlpatterns = [
         "workspaces/<slug:slug>/projects/<str:project_key>/archive/",
         ProjectArchiveView.as_view(),
         name="project-archive",
+    ),
+    path(
+        "workspaces/<slug:slug>/projects/<str:project_key>/workflow/",
+        ProjectWorkflowView.as_view(),
+        name="project-workflow",
+    ),
+    path(
+        "workspaces/<slug:slug>/projects/<str:project_key>/workflow/statuses/",
+        ProjectStatusCreateView.as_view(),
+        name="project-workflow-status-create",
+    ),
+    path(
+        "workspaces/<slug:slug>/projects/<str:project_key>/workflow/transitions/",
+        ProjectTransitionCreateView.as_view(),
+        name="project-workflow-transition-create",
+    ),
+    path(
+        "workspaces/<slug:slug>/projects/<str:project_key>/sprints/",
+        SprintListCreateView.as_view(),
+        name="project-sprints",
+    ),
+    path(
+        "workspaces/<slug:slug>/projects/<str:project_key>/sprints/<uuid:sprint_id>/start/",
+        SprintStartView.as_view(),
+        name="project-sprint-start",
+    ),
+    path(
+        "workspaces/<slug:slug>/projects/<str:project_key>/sprints/<uuid:sprint_id>/complete/",
+        SprintCompleteView.as_view(),
+        name="project-sprint-complete",
+    ),
+    path(
+        "workspaces/<slug:slug>/onboarding/",
+        OnboardingView.as_view(),
+        name="workspace-onboarding",
     ),
 ]

@@ -26,3 +26,6 @@ class User(AbstractUser):
     def full_name(self) -> str:
         name = f"{self.first_name} {self.last_name}".strip()
         return name or self.username
+
+
+from apps.accounts.onboarding import UserOnboarding  # noqa: E402,F401

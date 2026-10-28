@@ -227,6 +227,13 @@ class MembershipListCreateView(WorkspaceScopedMixin, generics.ListCreateAPIView)
             summary=f"Added {membership.user.email} as {membership.role}",
             metadata={"role": membership.role},
         )
+        from apps.accounts.onboarding import get_or_create_onboarding
+
+        onboarding = get_or_create_onboarding(self.request.user, self.workspace)
+        checklist = dict(onboarding.checklist or {})
+        checklist["invite_teammate"] = True
+        onboarding.checklist = checklist
+        onboarding.save(update_fields=["checklist", "updated_at"])
 
 
 class MembershipDetailView(WorkspaceScopedMixin, generics.RetrieveUpdateDestroyAPIView):

@@ -7,9 +7,21 @@ from django.db import models
 
 
 class Workspace(models.Model):
+    class TeamType(models.TextChoices):
+        SOFTWARE = "software", "Software"
+        BUSINESS = "business", "Business"
+        MARKETING = "marketing", "Marketing"
+        OTHER = "other", "Other"
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=120)
     slug = models.SlugField(max_length=80, unique=True)
+    team_type = models.CharField(
+        max_length=32,
+        choices=TeamType.choices,
+        default=TeamType.SOFTWARE,
+    )
+    timezone = models.CharField(max_length=64, default="UTC")
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.PROTECT,

@@ -5,6 +5,8 @@ from rest_framework.test import APITestCase
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from apps.projects.models import Project
+from apps.projects.templates import apply_template
+from apps.projects.workflow_models import Transition
 from apps.tasks.models import Task
 from apps.workspaces.models import Workspace, WorkspaceMembership
 
@@ -34,6 +36,7 @@ class TenantIsolationTests(APITestCase):
             key="WEB",
             created_by=self.owner,
         )
+        apply_template(self.project, "scrum")
 
     def _auth(self, user):
         token = RefreshToken.for_user(user)
@@ -55,13 +58,23 @@ class TenantIsolationTests(APITestCase):
         )
         self.assertEqual(created.status_code, status.HTTP_201_CREATED)
         task_id = created.data["id"]
+        task = Task.objects.get(pk=task_id)
+        transition = Transition.objects.get(
+            project=self.project,
+            from_status=task.workflow_status,
+            to_status__key="in_progress",
+        )
         pos_url = reverse("task-position", kwargs={"task_id": task_id})
         moved = self.client.patch(
             pos_url,
-            {"status": "in_progress", "position": 1500},
+            {
+                "transition_id": str(transition.id),
+                "position": 1500,
+                "version": task.version,
+            },
             format="json",
         )
-        self.assertEqual(moved.status_code, status.HTTP_200_OK)
+        self.assertEqual(moved.status_code, status.HTTP_200_OK, moved.data)
         self.assertEqual(moved.data["status"], "in_progress")
-        task = Task.objects.get(pk=task_id)
+        task.refresh_from_db()
         self.assertEqual(task.position, 1500)

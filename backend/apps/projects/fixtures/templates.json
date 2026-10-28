@@ -1,0 +1,98 @@
+[
+  {
+    "key": "scrum",
+    "name": "Scrum",
+    "description": "Plan work in sprints with a backlog, board, and story points.",
+    "includes": {
+      "issue_types": ["epic", "story", "task", "bug", "subtask"],
+      "board": true,
+      "backlog": true,
+      "sprints": true,
+      "nav": ["summary", "backlog", "board", "list", "reports", "issues", "releases", "components", "settings"]
+    },
+    "issue_types": [
+      { "key": "epic", "name": "Epic", "hierarchy_level": 1 },
+      { "key": "story", "name": "Story", "hierarchy_level": 0 },
+      { "key": "task", "name": "Task", "hierarchy_level": 0 },
+      { "key": "bug", "name": "Bug", "hierarchy_level": 0 },
+      { "key": "subtask", "name": "Sub-task", "hierarchy_level": -1 }
+    ],
+    "statuses": [
+      { "key": "backlog", "name": "Backlog", "category": "todo", "position": 0 },
+      { "key": "todo", "name": "To Do", "category": "todo", "position": 1 },
+      { "key": "in_progress", "name": "In Progress", "category": "in_progress", "position": 2 },
+      { "key": "in_review", "name": "In Review", "category": "in_progress", "position": 3 },
+      { "key": "done", "name": "Done", "category": "done", "position": 4 }
+    ],
+    "transitions": [
+      { "name": "Start progress", "from": "todo", "to": "in_progress" },
+      { "name": "Move to To Do", "from": "backlog", "to": "todo" },
+      { "name": "Submit for review", "from": "in_progress", "to": "in_review" },
+      { "name": "Return to progress", "from": "in_review", "to": "in_progress" },
+      { "name": "Complete", "from": "in_review", "to": "done" },
+      { "name": "Reopen", "from": "done", "to": "todo" },
+      { "name": "Park in backlog", "from": "todo", "to": "backlog" }
+    ]
+  },
+  {
+    "key": "kanban",
+    "name": "Kanban",
+    "description": "Continuous flow board without sprints. Pull work as capacity allows.",
+    "includes": {
+      "issue_types": ["epic", "task", "bug", "subtask"],
+      "board": true,
+      "backlog": false,
+      "sprints": false,
+      "nav": ["summary", "board", "list", "reports", "issues", "releases", "components", "settings"]
+    },
+    "issue_types": [
+      { "key": "epic", "name": "Epic", "hierarchy_level": 1 },
+      { "key": "task", "name": "Task", "hierarchy_level": 0 },
+      { "key": "bug", "name": "Bug", "hierarchy_level": 0 },
+      { "key": "subtask", "name": "Sub-task", "hierarchy_level": -1 }
+    ],
+    "statuses": [
+      { "key": "todo", "name": "To Do", "category": "todo", "position": 0 },
+      { "key": "in_progress", "name": "In Progress", "category": "in_progress", "position": 1 },
+      { "key": "in_review", "name": "In Review", "category": "in_progress", "position": 2 },
+      { "key": "done", "name": "Done", "category": "done", "position": 3 }
+    ],
+    "transitions": [
+      { "name": "Start progress", "from": "todo", "to": "in_progress" },
+      { "name": "Submit for review", "from": "in_progress", "to": "in_review" },
+      { "name": "Return to progress", "from": "in_review", "to": "in_progress" },
+      { "name": "Complete", "from": "in_review", "to": "done" },
+      { "name": "Reopen", "from": "done", "to": "todo" }
+    ]
+  },
+  {
+    "key": "bug_tracking",
+    "name": "Bug tracking",
+    "description": "Track defects from report to resolution with a simple bug-focused board.",
+    "includes": {
+      "issue_types": ["bug", "task", "subtask"],
+      "board": true,
+      "backlog": true,
+      "sprints": false,
+      "nav": ["summary", "backlog", "board", "list", "reports", "issues", "components", "settings"]
+    },
+    "issue_types": [
+      { "key": "bug", "name": "Bug", "hierarchy_level": 0 },
+      { "key": "task", "name": "Task", "hierarchy_level": 0 },
+      { "key": "subtask", "name": "Sub-task", "hierarchy_level": -1 }
+    ],
+    "statuses": [
+      { "key": "todo", "name": "Open", "category": "todo", "position": 0 },
+      { "key": "in_progress", "name": "In Progress", "category": "in_progress", "position": 1 },
+      { "key": "in_review", "name": "In Review", "category": "in_progress", "position": 2 },
+      { "key": "done", "name": "Resolved", "category": "done", "position": 3 }
+    ],
+    "transitions": [
+      { "name": "Start work", "from": "todo", "to": "in_progress" },
+      { "name": "Ready for review", "from": "in_progress", "to": "in_review" },
+      { "name": "Reopen work", "from": "in_review", "to": "in_progress" },
+      { "name": "Resolve", "from": "in_review", "to": "done" },
+      { "name": "Reopen", "from": "done", "to": "todo" }
+    ]
+  }
+]
