@@ -1,86 +1,243 @@
 @import 'tailwindcss';
 
-/* Themeable tokens — light defaults, overridden by [data-theme="dark"] */
+/*
+  Nexus design tokens — single source of truth.
+  Brand: Emerald landing palette. Switch themes via html[data-theme].
+  Light = :root · Dark = [data-theme='dark']. Landing inherits these.
+*/
+
 :root {
   color-scheme: light;
 
-  --nexus-paper: #f4f2eb;
-  --nexus-surface: #ffffff;
-  --nexus-surface-low: #ebe8e0;
-  --nexus-ink: #0d1218;
-  --nexus-ink-secondary: #3d4752;
-  --nexus-ink-muted: #5c6670;
-  --nexus-border: #d8d5cc;
-  --nexus-border-strong: #c4c1b6;
-  --nexus-brand: #2a6b66;
-  --nexus-mint: #dcebe5;
-  --nexus-status-backlog: #4b5563;
-  --nexus-status-todo: #1d4ed8;
-  --nexus-status-progress: #0f766e;
-  --nexus-status-review: #b45309;
-  --nexus-status-done: #15803d;
+  /* Core surfaces (landing light) */
+  --bg: #f5f7f3;
+  --surface-1: #ffffff;
+  --surface-2: #eef3ee;
+  --surface-3: #e2eae3;
+  --border: #dce5de;
+  --border-strong: #c4d2c7;
+  --text: #0f2119;
+  --text-muted: #4e6358;
+  --text-faint: #7a8f82;
+  --accent: #17805f;
+  --accent-hover: #13704f;
+  --accent-text: #0e6a4e;
+  --on-accent: #ffffff;
+  --highlight: #7a5a22;
+  --glow-emerald: #10b981;
+  --glow-aqua: #2bb5c9;
+  --danger: #c2413e;
+  --warning: #a86a12;
+  --success: #17805f;
+  --grain-opacity: 0.02;
 
+  /* App aliases → same palette (Tailwind bg-paper / text-ink / bg-brand) */
+  --nexus-paper: var(--bg);
+  --nexus-surface: var(--surface-1);
+  --nexus-surface-low: var(--surface-2);
+  --nexus-surface-raised: var(--surface-1);
+  --nexus-ink: var(--text);
+  --nexus-ink-secondary: var(--text-muted);
+  --nexus-ink-muted: var(--text-faint);
+  --nexus-border: var(--border);
+  --nexus-border-strong: var(--border-strong);
+  --nexus-brand: var(--accent);
+  --nexus-mint: var(--surface-3);
+  --nexus-ink-hover: var(--accent-hover);
+
+  --nexus-status-backlog: var(--text-muted);
+  --nexus-status-todo: #3b6ea5;
+  --nexus-status-progress: var(--accent);
+  --nexus-status-review: var(--warning);
+  --nexus-status-done: var(--success);
+
+  --nexus-danger: var(--danger);
+  --nexus-danger-soft: color-mix(in srgb, var(--danger) 12%, transparent);
+  --nexus-warning: var(--warning);
+  --nexus-warning-soft: color-mix(in srgb, var(--warning) 14%, transparent);
+  --nexus-success: var(--success);
+  --nexus-success-soft: color-mix(in srgb, var(--success) 12%, transparent);
+
+  /* Semantic aliases used by shell + landing */
+  --surface: var(--surface-1);
+  --surface-low: var(--surface-2);
+  --surface-raised: var(--surface-1);
+  --accent-soft: color-mix(in srgb, var(--accent) 12%, transparent);
+  --accent-soft-strong: color-mix(in srgb, var(--accent) 22%, transparent);
+  --accent-glow: color-mix(in srgb, var(--accent) 40%, transparent);
+  --highlight-soft: color-mix(in srgb, var(--highlight) 12%, transparent);
+  --glow-emerald-soft: color-mix(in srgb, var(--glow-emerald) 8%, transparent);
+  --glow-aqua-soft: color-mix(in srgb, var(--glow-aqua) 8%, transparent);
+  --text-faint-soft: color-mix(in srgb, var(--text-faint) 70%, transparent);
+  --nav-glass: color-mix(in srgb, var(--bg) 88%, transparent);
+  --surface-chip: var(--surface-3);
+  --surface-elevated: var(--border-strong);
+  --surface-active: var(--surface-3);
+  --surface-logo: var(--surface-1);
+  --eyebrow-bg: color-mix(in srgb, var(--surface-2) 80%, transparent);
+  --focus-ring: var(--accent);
+  --landing-canvas: var(--bg);
+
+  /* Depth */
+  --shadow-hairline: 0 0 0 1px var(--border);
+  --shadow-contact: 0 1px 2px rgba(15, 33, 25, 0.04);
+  --shadow-ambient: 0 12px 32px -12px rgba(15, 33, 25, 0.1);
+  --shadow-raised: var(--shadow-hairline), var(--shadow-contact), var(--shadow-ambient);
+  --shadow-overlay:
+    0 0 0 1px var(--border-strong), 0 4px 10px rgba(15, 33, 25, 0.06),
+    0 24px 48px -14px rgba(15, 33, 25, 0.14);
+  --shadow-glow:
+    0 0 0 1px color-mix(in srgb, var(--accent) 28%, transparent),
+    0 1px 2px rgba(15, 33, 25, 0.05),
+    0 0 36px -6px color-mix(in srgb, var(--glow-emerald) 28%, transparent);
+  --shadow-card: 0 1px 2px rgba(15, 33, 25, 0.04),
+    0 12px 32px -12px rgba(15, 33, 25, 0.1);
+  --shadow-board: var(--shadow-card);
+  --shadow-cta: var(--shadow-card);
+  --shadow-button: 0 1px 2px rgba(15, 33, 25, 0.06);
+  --inset-highlight: inset 0 1px 0 color-mix(in srgb, #fff 70%, transparent);
+  --inset-shine: var(--inset-highlight);
+  --dot-grid-ink: color-mix(in srgb, var(--text) 6%, transparent);
+  --traffic-red: color-mix(in srgb, var(--danger) 80%, transparent);
+  --traffic-yellow: color-mix(in srgb, var(--warning) 80%, transparent);
+  --traffic-green: color-mix(in srgb, var(--accent) 80%, transparent);
+
+  /* Atmosphere */
   --nexus-page-gradient: linear-gradient(
-    165deg,
-    #f7f4ec 0%,
-    #eef3f0 38%,
-    #e6ebe8 68%,
-    #f2efe6 100%
+    168deg,
+    #f5f7f3 0%,
+    #eef3ee 42%,
+    #e8f0ea 72%,
+    #f5f7f3 100%
   );
   --nexus-hero-glow: radial-gradient(
-      ellipse 80% 55% at 50% -8%,
-      rgba(42, 107, 102, 0.18),
-      transparent 58%
-    ),
-    linear-gradient(180deg, #f7f4ec 0%, #e8efe9 55%, transparent 100%);
-  --nexus-dot-grid: rgba(13, 18, 24, 0.07);
-  --nexus-nav-scrolled: rgba(244, 242, 235, 0.9);
-  --nexus-ink-hover: #1a2430;
-  --nexus-shadow: rgba(13, 18, 24, 0.18);
+    ellipse 70% 50% at 50% -10%,
+    var(--glow-emerald-soft),
+    transparent 60%
+  );
+  --nexus-noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  --nexus-dot-grid: var(--dot-grid-ink);
+  --nexus-nav-scrolled: var(--nav-glass);
+  --nexus-sidebar-bg: color-mix(in srgb, var(--surface-2) 88%, transparent);
+  --nexus-sidebar-gradient: linear-gradient(
+    185deg,
+    color-mix(in srgb, var(--accent) 10%, transparent) 0%,
+    color-mix(in srgb, var(--bg) 40%, transparent) 38%,
+    transparent 58%
+  );
+
+  /* Radius / motion / z */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-2xl: 16px;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --duration-fast: 120ms;
+  --duration-base: 180ms;
+  --duration-slow: 240ms;
+  --duration-panel: 320ms;
+  --z-base: 1;
+  --z-sticky: 20;
+  --z-overlay: 40;
+  --z-modal: 50;
+  --z-toast: 60;
 }
 
 [data-theme='dark'] {
   color-scheme: dark;
 
-  --nexus-paper: #0c1016;
-  --nexus-surface: #151a22;
-  --nexus-surface-low: #1b222c;
-  --nexus-ink: #f3f1ea;
-  --nexus-ink-secondary: #c2c7ce;
-  --nexus-ink-muted: #8b939c;
-  --nexus-border: #2a3340;
-  --nexus-border-strong: #3a4554;
-  --nexus-brand: #5bb3ab;
-  --nexus-mint: #1a2f2c;
-  --nexus-status-backlog: #94a3b8;
+  --bg: #050d0a;
+  --surface-1: #0a1713;
+  --surface-2: #0f211b;
+  --surface-3: #152d25;
+  --border: #1a3329;
+  --border-strong: #27493b;
+  --text: #e9f5ef;
+  --text-muted: #8faaa0;
+  --text-faint: #5f7a70;
+  --accent: #34d3a0;
+  --accent-hover: #5ce5bb;
+  --accent-text: #5ce5bb;
+  --on-accent: #04110c;
+  --highlight: #f2e8d5;
+  --glow-emerald: #10b981;
+  --glow-aqua: #2bb5c9;
+  --danger: #f2777a;
+  --warning: #f4b860;
+  --success: #34d3a0;
+  --grain-opacity: 0.035;
+
   --nexus-status-todo: #60a5fa;
-  --nexus-status-progress: #2dd4bf;
-  --nexus-status-review: #fbbf24;
-  --nexus-status-done: #4ade80;
+  --nexus-status-review: #f4b860;
+  --nexus-danger-soft: color-mix(in srgb, var(--danger) 14%, transparent);
+  --nexus-warning-soft: color-mix(in srgb, var(--warning) 14%, transparent);
+  --nexus-success-soft: color-mix(in srgb, var(--success) 12%, transparent);
+
+  --accent-soft: color-mix(in srgb, var(--accent) 12%, transparent);
+  --accent-soft-strong: color-mix(in srgb, var(--accent) 22%, transparent);
+  --accent-glow: color-mix(in srgb, var(--accent) 40%, transparent);
+  --highlight-soft: color-mix(in srgb, var(--highlight) 12%, transparent);
+  --glow-emerald-soft: color-mix(in srgb, var(--glow-emerald) 10%, transparent);
+  --glow-aqua-soft: color-mix(in srgb, var(--glow-aqua) 10%, transparent);
+  --text-faint-soft: color-mix(in srgb, var(--text-faint) 70%, transparent);
+  --nav-glass: color-mix(in srgb, var(--bg) 80%, transparent);
+  --surface-chip: var(--surface-3);
+  --surface-elevated: var(--border-strong);
+  --surface-active: var(--surface-3);
+  --surface-logo: var(--surface-1);
+  --eyebrow-bg: color-mix(in srgb, var(--surface-2) 80%, transparent);
+  --landing-canvas: var(--bg);
+
+  --shadow-hairline: 0 0 0 1px var(--border);
+  --shadow-contact: 0 1px 2px rgb(0 0 0 / 0.45);
+  --shadow-ambient: 0 12px 32px -10px rgb(0 0 0 / 0.55);
+  --shadow-raised:
+    0 0 0 1px var(--border-strong), var(--shadow-contact), var(--shadow-ambient);
+  --shadow-overlay:
+    0 0 0 1px var(--border-strong), 0 8px 16px rgb(0 0 0 / 0.45),
+    0 28px 56px -14px rgb(0 0 0 / 0.72);
+  --shadow-glow:
+    0 0 0 1px color-mix(in srgb, var(--accent) 35%, transparent),
+    0 0 0 1px rgb(255 255 255 / 0.04) inset,
+    0 0 42px -4px color-mix(in srgb, var(--glow-emerald) 40%, transparent);
+  --shadow-card: 0 1px 2px color-mix(in srgb, #000 35%, transparent),
+    0 12px 32px -12px color-mix(in srgb, #000 55%, transparent);
+  --shadow-board: 0 24px 64px color-mix(in srgb, #000 85%, transparent);
+  --shadow-cta: 0 24px 64px color-mix(in srgb, #000 45%, transparent);
+  --shadow-button: 0 1px 1px color-mix(in srgb, #000 5%, transparent);
+  --inset-highlight: inset 0 1px 0 color-mix(in srgb, var(--text) 6%, transparent);
+  --inset-shine: var(--inset-highlight);
+  --dot-grid-ink: color-mix(in srgb, var(--text) 4%, transparent);
 
   --nexus-page-gradient: linear-gradient(
-    165deg,
-    #0a0e14 0%,
-    #101820 36%,
-    #0e1716 70%,
-    #0c1016 100%
+    168deg,
+    #050d0a 0%,
+    #071410 40%,
+    #0a1713 72%,
+    #050d0a 100%
   );
   --nexus-hero-glow: radial-gradient(
-      ellipse 80% 55% at 50% -8%,
-      rgba(91, 179, 171, 0.16),
-      transparent 58%
-    ),
-    linear-gradient(180deg, #0c1016 0%, #111a1c 55%, transparent 100%);
-  --nexus-dot-grid: rgba(243, 241, 234, 0.05);
-  --nexus-nav-scrolled: rgba(12, 16, 22, 0.88);
-  --nexus-ink-hover: #e8e4da;
-  --nexus-shadow: rgba(0, 0, 0, 0.45);
+    ellipse 70% 50% at 50% -10%,
+    var(--glow-emerald-soft),
+    transparent 60%
+  );
+  --nexus-noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+  --nexus-dot-grid: var(--dot-grid-ink);
+  --nexus-nav-scrolled: var(--nav-glass);
+  --nexus-sidebar-bg: color-mix(in srgb, var(--surface-1) 78%, transparent);
+  --nexus-sidebar-gradient: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--accent) 12%, transparent) 0%,
+    transparent 45%
+  );
 }
 
 @theme {
   --color-paper: var(--nexus-paper);
   --color-surface: var(--nexus-surface);
   --color-surface-low: var(--nexus-surface-low);
+  --color-surface-raised: var(--nexus-surface-raised);
   --color-ink: var(--nexus-ink);
   --color-ink-secondary: var(--nexus-ink-secondary);
   --color-ink-muted: var(--nexus-ink-muted);
@@ -88,15 +245,30 @@
   --color-border-strong: var(--nexus-border-strong);
   --color-brand: var(--nexus-brand);
   --color-mint: var(--nexus-mint);
+  --color-on-accent: var(--on-accent);
+  --color-accent-text: var(--accent-text);
+  --color-highlight: var(--highlight);
+  --color-danger: var(--nexus-danger);
+  --color-danger-soft: var(--nexus-danger-soft);
+  --color-warning: var(--nexus-warning);
+  --color-warning-soft: var(--nexus-warning-soft);
+  --color-success: var(--nexus-success);
+  --color-success-soft: var(--nexus-success-soft);
   --color-status-backlog: var(--nexus-status-backlog);
   --color-status-todo: var(--nexus-status-todo);
   --color-status-progress: var(--nexus-status-progress);
   --color-status-review: var(--nexus-status-review);
   --color-status-done: var(--nexus-status-done);
 
-  --font-display: 'Newsreader', Georgia, 'Times New Roman', serif;
-  --font-sans: 'Manrope', system-ui, sans-serif;
-  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+  /* Newsreader + Geist + Geist Mono across landing + app */
+  --font-display: 'Newsreader Variable', 'Newsreader', Georgia, 'Times New Roman', serif;
+  --font-sans: 'Geist Variable', 'Geist', 'Manrope', system-ui, sans-serif;
+  --font-mono: 'Geist Mono Variable', 'Geist Mono', 'IBM Plex Mono', ui-monospace, monospace;
+
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
 }
 
 @layer base {
@@ -109,25 +281,42 @@
     min-width: 320px;
     min-height: 100vh;
     font-family: var(--font-sans);
-    color: var(--nexus-ink);
-    background-color: var(--nexus-paper);
+    color: var(--text);
+    background-color: var(--bg);
     background-image: var(--nexus-page-gradient);
     background-attachment: fixed;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    transition:
-      background-color 0.25s ease,
-      color 0.25s ease;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 1;
+    background-image: var(--nexus-noise);
+    background-repeat: repeat;
+    background-size: 180px 180px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    body::before {
+      display: none;
+    }
   }
 
   #root {
+    position: relative;
+    z-index: var(--z-base);
     min-height: 100vh;
   }
 
   ::selection {
-    background: var(--nexus-mint);
-    color: var(--nexus-ink);
+    background: var(--accent-soft);
+    color: var(--text);
   }
 
   a {
@@ -136,7 +325,9 @@
   }
 
   button,
-  input {
+  input,
+  select,
+  textarea {
     font: inherit;
   }
 }
@@ -159,12 +350,12 @@
   }
 
   .focus-ring:focus-visible {
-    outline: 2px solid var(--nexus-brand);
+    outline: 2px solid var(--focus-ring);
     outline-offset: 2px;
   }
 
   .bg-page {
-    background-color: var(--nexus-paper);
+    background-color: var(--bg);
     background-image: var(--nexus-page-gradient);
     background-attachment: fixed;
   }
@@ -186,16 +377,151 @@
     background-color: var(--nexus-nav-scrolled);
   }
 
+  /* Depth surfaces */
+  .surface-card {
+    background-color: var(--surface-raised);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-raised), var(--inset-highlight);
+  }
+
+  .surface-card-hover {
+    transition:
+      box-shadow var(--duration-base) var(--ease-out),
+      transform var(--duration-fast) var(--ease-out);
+  }
+
+  .surface-card-hover:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-overlay), var(--inset-highlight);
+  }
+
+  .surface-panel {
+    background-color: var(--surface-raised);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-raised), var(--inset-highlight);
+  }
+
   .shadow-soft {
-    box-shadow: 0 30px 80px -40px var(--nexus-shadow);
+    box-shadow: var(--shadow-overlay);
   }
 
   .shadow-panel {
-    box-shadow: 0 20px 50px -36px var(--nexus-shadow);
+    box-shadow: var(--shadow-raised), var(--inset-highlight);
   }
 
-  .btn-primary-hover:hover {
-    background-color: var(--nexus-ink-hover);
+  .shadow-hairline {
+    box-shadow: var(--shadow-hairline);
+  }
+
+  .shadow-raised {
+    box-shadow: var(--shadow-raised), var(--inset-highlight);
+  }
+
+  .shadow-overlay {
+    box-shadow: var(--shadow-overlay), var(--inset-highlight);
+  }
+
+  .glow-accent {
+    box-shadow: var(--shadow-glow), var(--inset-highlight);
+  }
+
+  .sidebar-glass {
+    background-color: var(--nexus-sidebar-bg);
+    background-image: var(--nexus-sidebar-gradient);
+    backdrop-filter: blur(16px) saturate(140%);
+    -webkit-backdrop-filter: blur(16px) saturate(140%);
+    border-right: 1px solid var(--border);
+  }
+
+  .topbar-glass {
+    background-color: var(--nexus-nav-scrolled);
+    backdrop-filter: blur(12px) saturate(140%);
+    -webkit-backdrop-filter: blur(12px) saturate(140%);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .nav-item {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    border-radius: var(--radius-lg);
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    transition:
+      color var(--duration-fast) var(--ease-out),
+      background-color var(--duration-fast) var(--ease-out);
+  }
+
+  .nav-item:hover {
+    color: var(--text);
+    background-color: var(--surface-low);
+  }
+
+  .nav-item:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+
+  .nav-item-active {
+    color: var(--text);
+    background-color: var(--accent-soft);
+  }
+
+  .nav-item-active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 6px;
+    bottom: 6px;
+    width: 2px;
+    border-radius: 2px;
+    background: var(--accent);
+  }
+
+  .btn-lift {
+    transition:
+      transform var(--duration-fast) var(--ease-out),
+      box-shadow var(--duration-fast) var(--ease-out),
+      background-color var(--duration-fast) var(--ease-out),
+      border-color var(--duration-fast) var(--ease-out),
+      opacity var(--duration-fast) var(--ease-out);
+  }
+
+  .btn-lift:hover:not(:disabled) {
+    transform: translateY(-1px);
+  }
+
+  .btn-lift:active:not(:disabled) {
+    transform: scale(0.98);
+  }
+
+  .btn-primary-hover:hover:not(:disabled) {
+    background-color: var(--accent-hover);
+  }
+
+  .status-dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 999px;
+    background: currentColor;
+    box-shadow: 0 0 0 3px color-mix(in srgb, currentColor 22%, transparent);
+  }
+
+  .row-raise {
+    transition:
+      background-color var(--duration-fast) var(--ease-out),
+      box-shadow var(--duration-base) var(--ease-out),
+      transform var(--duration-fast) var(--ease-out);
+  }
+
+  .row-raise:hover {
+    background-color: var(--surface-low);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-contact);
   }
 }
 
@@ -233,19 +559,19 @@
 }
 
 .animate-fade-up {
-  animation: fade-up 0.7s ease-out both;
+  animation: fade-up 0.7s var(--ease-out) both;
 }
 
 .animate-fade-up-delay-1 {
-  animation: fade-up 0.7s ease-out 0.12s both;
+  animation: fade-up 0.7s var(--ease-out) 0.12s both;
 }
 
 .animate-fade-up-delay-2 {
-  animation: fade-up 0.7s ease-out 0.24s both;
+  animation: fade-up 0.7s var(--ease-out) 0.24s both;
 }
 
 .animate-fade-up-delay-3 {
-  animation: fade-up 0.7s ease-out 0.36s both;
+  animation: fade-up 0.7s var(--ease-out) 0.36s both;
 }
 
 .animate-pulse-soft {
@@ -254,4 +580,128 @@
 
 .animate-float {
   animation: float-y 5s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-up,
+  .animate-fade-up-delay-1,
+  .animate-fade-up-delay-2,
+  .animate-fade-up-delay-3,
+  .animate-pulse-soft,
+  .animate-float {
+    animation: none;
+  }
+
+  .surface-card-hover:hover,
+  .btn-lift:hover:not(:disabled),
+  .btn-lift:active:not(:disabled),
+  .row-raise:hover {
+    transform: none;
+  }
+}
+
+/* Landing display face — public files so preload URL matches @font-face (font-display: swap) */
+@font-face {
+  font-family: 'Newsreader Variable';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 200 800;
+  src: url('/fonts/newsreader-latin-wght-normal.woff2') format('woff2-variations');
+}
+
+@font-face {
+  font-family: 'Newsreader Variable';
+  font-style: italic;
+  font-display: swap;
+  font-weight: 200 800;
+  src: url('/fonts/newsreader-latin-wght-italic.woff2') format('woff2-variations');
+}
+
+/* Landing inherits html[data-theme] tokens; only layout chrome differs */
+body:has(.landing) {
+  background-image: none;
+  background-color: var(--landing-canvas, var(--bg));
+}
+
+body:has(.landing)::before {
+  display: none;
+}
+
+.landing {
+  --radius-md: 8px;
+  --radius-lg: 10px;
+  --radius-xl: 12px;
+  color: var(--text);
+  background-color: var(--bg);
+  font-family: var(--font-sans);
+  min-height: 100vh;
+}
+
+/* Circular theme reveal (startViewTransition) */
+html.theme-vt-active::view-transition-old(root),
+html.theme-vt-active::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+html.theme-vt-active::view-transition-old(root) {
+  z-index: 1;
+}
+
+html.theme-vt-active::view-transition-new(root) {
+  z-index: 2;
+  animation: landing-theme-circle 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes landing-theme-circle {
+  from {
+    clip-path: circle(0% at var(--theme-x, 50%) var(--theme-y, 50%));
+  }
+  to {
+    clip-path: circle(150% at var(--theme-x, 50%) var(--theme-y, 50%));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.theme-vt-active::view-transition-new(root) {
+    animation: none;
+  }
+}
+
+.landing .font-display {
+  font-family: var(--font-display);
+}
+
+.landing .font-mono {
+  font-family: var(--font-mono);
+}
+
+.landing .tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+.landing-dot-grid {
+  background-image: radial-gradient(
+    circle at 1px 1px,
+    var(--dot-grid-ink) 1px,
+    transparent 0
+  );
+  background-size: 24px 24px;
+}
+
+.landing-bento-tile {
+  --spot-x: 50%;
+  --spot-y: 50%;
+  background:
+    radial-gradient(
+      420px circle at var(--spot-x) var(--spot-y),
+      var(--glow-aqua-soft),
+      transparent 55%
+    ),
+    var(--surface-1);
+  box-shadow: var(--inset-shine);
+}
+
+.landing-bento-tile[data-spotlight='off'] {
+  background: var(--surface-1);
 }

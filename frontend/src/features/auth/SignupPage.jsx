@@ -75,7 +75,7 @@ export function SignupPage() {
         {formError ? (
           <div
             role="alert"
-            className="rounded-lg border border-red-300/60 bg-red-50 px-3 py-2 text-sm text-red-800"
+            className="rounded-lg border border-danger/30 bg-danger-soft px-3 py-2 text-sm text-danger"
           >
             {formError}
           </div>
@@ -140,7 +140,7 @@ export function SignupPage() {
           </span>
         </label>
         {errors.accept_terms?.message ? (
-          <p className="-mt-2 text-xs text-red-600">{errors.accept_terms.message}</p>
+          <p className="-mt-2 text-xs text-danger">{errors.accept_terms.message}</p>
         ) : null}
 
         <Button type="submit" className="w-full py-3" disabled={isSubmitting}>
@@ -177,13 +177,13 @@ function Field({ label, error, children }) {
     <label className="block">
       <span className="mb-1.5 block text-sm font-medium text-ink">{label}</span>
       {children}
-      {error ? <span className="mt-1 block text-xs text-red-600">{error}</span> : null}
+      {error ? <span className="mt-1 block text-xs text-danger">{error}</span> : null}
     </label>
   )
 }
 
 function inputClass(error) {
-  return `w-full rounded-lg border bg-paper px-3 py-2.5 text-sm text-ink placeholder:text-ink-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-brand ${
-    error ? 'border-red-400' : 'border-border'
+  return `w-full rounded-lg border bg-surface-low px-3 py-2.5 text-sm text-ink placeholder:text-ink-muted shadow-hairline focus:outline-none focus-visible:ring-2 focus-visible:ring-brand ${
+    error ? 'border-danger' : 'border-border'
   }`
 }

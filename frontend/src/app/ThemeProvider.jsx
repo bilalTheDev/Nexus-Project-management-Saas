@@ -5,6 +5,7 @@ import {
   applyTheme,
   getPreferredTheme,
 } from './theme-context'
+// applyTheme keeps <html data-theme> + color-scheme in sync with React state
 
 export function ThemeProvider({ children }) {
   const [theme, setThemeState] = useState(() => {
@@ -39,12 +40,14 @@ export function ThemeProvider({ children }) {
   }, [])
 
   const setTheme = useCallback((next) => {
-    setThemeState(next === 'dark' ? 'dark' : 'light')
+    const resolved = next === 'dark' ? 'dark' : 'light'
+    applyTheme(resolved)
+    setThemeState(resolved)
   }, [])
 
   const toggleTheme = useCallback(() => {
-    setThemeState((prev) => (prev === 'dark' ? 'light' : 'dark'))
-  }, [])
+    setTheme(theme === 'dark' ? 'light' : 'dark')
+  }, [setTheme, theme])
 
   const value = useMemo(
     () => ({ theme, setTheme, toggleTheme, isDark: theme === 'dark' }),
