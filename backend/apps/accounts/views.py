@@ -42,33 +42,37 @@ def _axes_credentials(email: str) -> dict:
 def _axes_is_locked(request, email: str) -> bool:
     try:
         from axes.handlers.proxy import AxesProxyHandler
-    except ImportError:
+
+        return AxesProxyHandler.is_locked(request, _axes_credentials(email))
+    except Exception:
+        # Never block sign-in because lockout bookkeeping failed.
         return False
-    return AxesProxyHandler.is_locked(request, _axes_credentials(email))
 
 
 def _axes_login_failed(request, email: str) -> None:
     try:
         from axes.handlers.proxy import AxesProxyHandler
-    except ImportError:
+
+        AxesProxyHandler.user_login_failed(
+            sender=User,
+            request=request,
+            credentials=_axes_credentials(email),
+        )
+    except Exception:
         return
-    AxesProxyHandler.user_login_failed(
-        sender=User,
-        request=request,
-        credentials=_axes_credentials(email),
-    )
 
 
 def _axes_login_succeeded(request, user) -> None:
     try:
         from axes.handlers.proxy import AxesProxyHandler
-    except ImportError:
+
+        AxesProxyHandler.user_logged_in(
+            sender=User,
+            request=request,
+            user=user,
+        )
+    except Exception:
         return
-    AxesProxyHandler.user_logged_in(
-        sender=User,
-        request=request,
-        user=user,
-    )
 
 
 class RegisterView(generics.CreateAPIView):

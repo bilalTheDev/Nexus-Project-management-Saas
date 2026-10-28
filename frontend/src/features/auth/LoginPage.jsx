@@ -60,17 +60,26 @@ export function LoginPage() {
     try {
       await completeLogin(values.email, values.password)
     } catch (err) {
-      const detail =
-        err.response?.data?.detail ||
-        (err.response?.status === 429
-          ? 'Too many sign-in attempts. Wait a minute and try again.'
-          : null) ||
-        (err.message === 'Network Error'
-          ? 'Cannot reach the API. Is the backend running, and is CORS allowing this origin?'
-          : null) ||
-        'Invalid email or password. Please try again.'
-      setFormError(typeof detail === 'string' ? detail : 'Sign in failed.')
+      setFormError(
+        authErrorMessage(err, 'Invalid email or password. Please try again.'),
+      )
     }
+  }
+
+  function authErrorMessage(err, fallback) {
+    const data = err.response?.data
+    const detail = data?.detail
+    if (typeof detail === 'string' && detail.trim()) return detail
+    if (err.response?.status === 429) {
+      return 'Too many sign-in attempts. Wait a minute and try again.'
+    }
+    if (!err.response) {
+      return 'Cannot reach the API. Start the backend (port 8000) and use the same host as Vite (localhost vs 127.0.0.1).'
+    }
+    if (err.response.status === 401) {
+      return `${fallback} If this persists, run: python manage.py seed_demo_users`
+    }
+    return fallback
   }
 
   async function signInAsDemo(user) {
@@ -84,16 +93,12 @@ export function LoginPage() {
     try {
       await completeLogin(user.email, user.password)
     } catch (err) {
-      const detail =
-        err.response?.data?.detail ||
-        (err.response?.status === 429
-          ? 'Too many sign-in attempts. Wait a minute and try again.'
-          : null) ||
-        (err.message === 'Network Error'
-          ? 'Cannot reach the API. Is the backend running, and is CORS allowing this origin?'
-          : null) ||
-        'Demo sign-in failed. Seed demo users with: python manage.py seed_demo_users'
-      setFormError(typeof detail === 'string' ? detail : 'Demo sign-in failed.')
+      setFormError(
+        authErrorMessage(
+          err,
+          'Demo sign-in failed. Seed demo users with: python manage.py seed_demo_users',
+        ),
+      )
     } finally {
       setDemoLoading('')
     }
