@@ -1,7 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { fetchProjects, updateOnboarding, unwrapList } from '@/lib/workspace-api'
+import {
+  fetchProjects,
+  fetchWorkspaceSearch,
+  updateOnboarding,
+  unwrapList,
+} from '@/lib/workspace-api'
 
 export function CommandPalette() {
   const { workspaceSlug } = useParams()
@@ -13,6 +18,11 @@ export function CommandPalette() {
     queryKey: ['projects', workspaceSlug, 'cmdk'],
     queryFn: () => fetchProjects(workspaceSlug),
     enabled: open && Boolean(workspaceSlug),
+  })
+  const searchQuery = useQuery({
+    queryKey: ['search', workspaceSlug, query],
+    queryFn: () => fetchWorkspaceSearch(workspaceSlug, query),
+    enabled: open && Boolean(workspaceSlug) && query.trim().length > 1,
   })
 
   useEffect(() => {
@@ -82,7 +92,27 @@ export function CommandPalette() {
               Create project
             </button>
           </li>
-          {filtered.map((project) => (
+          {(searchQuery.data?.issues || []).map((issue) => (
+            <li key={issue.id}>
+              <button
+                type="button"
+                className="w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-[var(--surface-2)]"
+                onClick={() => {
+                  setOpen(false)
+                  navigate(`/app/${workspaceSlug}/issues/${issue.id}`)
+                }}
+              >
+                <span className="font-mono text-xs text-[var(--text-muted)]">
+                  {issue.key}
+                </span>{' '}
+                {issue.title}
+              </button>
+            </li>
+          ))}
+          {(searchQuery.data?.projects?.length
+            ? searchQuery.data.projects
+            : filtered
+          ).map((project) => (
             <li key={project.id}>
               <button
                 type="button"

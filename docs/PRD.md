@@ -21,12 +21,24 @@ Authentication, workspaces & roles, projects, tasks (list + Kanban), comments, a
 - Onboarding checklist + guided tour (server-backed) + Ctrl/Cmd+K palette
 - See `docs/WORKFLOWS.md`
 
+## Built (Phase 2)
+
+- Report aggregates: burndown, velocity, sprint report, CFD, created vs resolved, breakdown, summary
+- Issue navigator (URL filters + hand-written query language) and workspace search
+- Recharts UI with empty/loading/error, table toggle, token colours (`docs/REPORTS.md`)
+
+## Built (Phase 3)
+
+- Releases (publish warning + move unresolved + Markdown notes)
+- Components
+- Project memberships + `policy.py` + `GET /me/permissions/`
+- In-app notifications model with dedupe keys
+
 ## Deferred
 
-- Phase 2: Recharts reports, issue navigator / query language, global search depth
-- Phase 3: Releases, components, project roles/`policy.py`, notifications
-- Attachments storage, `@xyflow` workflow canvas, full Playwright suite in CI
-- i18next message catalogue (strings still inline for Phase 1)
+- Attachments object storage, `@xyflow` workflow canvas, full Playwright acceptance in CI
+- i18next message catalogue; saved-filter sharing UI polish
+- Board column virtualization (>100) and richer Markdown sanitiser
 
 ## Non-goals (v1)
 

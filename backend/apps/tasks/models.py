@@ -10,6 +10,8 @@ from apps.projects.models import Project
 from apps.projects.sprint_models import Sprint
 from apps.projects.workflow_models import IssueType, WorkflowStatus
 
+# Late imports for optional Phase 3 FKs avoided in initial field defs — see migration 0005.
+
 
 class Task(models.Model):
     """Issue work item. API/UI term is 'issue'; model kept as Task for migration continuity."""
@@ -68,6 +70,18 @@ class Task(models.Model):
         Sprint,
         on_delete=models.SET_NULL,
         null=True,
+        blank=True,
+        related_name="issues",
+    )
+    fix_version = models.ForeignKey(
+        "projects.Release",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="issues",
+    )
+    components = models.ManyToManyField(
+        "projects.Component",
         blank=True,
         related_name="issues",
     )

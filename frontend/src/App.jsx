@@ -14,6 +14,11 @@ import { ProjectCreatePage } from '@/features/projects/ProjectCreatePage'
 import { ProjectShell } from '@/features/projects/ProjectShell'
 import { ProjectPlaceholderPage } from '@/features/projects/ProjectPlaceholderPage'
 import { BacklogPage } from '@/features/projects/BacklogPage'
+import { ReportsPage } from '@/features/projects/ReportsPage'
+import { IssuesNavigatorPage } from '@/features/projects/IssuesNavigatorPage'
+import { ReleasesPage } from '@/features/projects/ReleasesPage'
+import { ComponentsPage } from '@/features/projects/ComponentsPage'
+import { ProjectSummaryPage } from '@/features/projects/ProjectSummaryPage'
 import { KanbanBoardPage } from '@/features/tasks/KanbanBoardPage'
 import { TaskDetailPage } from '@/features/tasks/TaskDetailPage'
 import { MyTasksPage } from '@/features/tasks/MyTasksPage'
@@ -44,49 +49,14 @@ export default function App() {
         <Route path="projects/new" element={<ProjectCreatePage />} />
         <Route path="projects/:projectKey" element={<ProjectShell />}>
           <Route index element={<Navigate to="board" replace />} />
-          <Route
-            path="summary"
-            element={
-              <ProjectPlaceholderPage title="Summary" body="Project health and recent delivery signals." />
-            }
-          />
+          <Route path="summary" element={<ProjectSummaryPage />} />
           <Route path="backlog" element={<BacklogPage />} />
           <Route path="board" element={<KanbanBoardPage />} />
-          <Route
-            path="list"
-            element={<ProjectPlaceholderPage title="List" />}
-          />
-          <Route
-            path="reports"
-            element={
-              <ProjectPlaceholderPage
-                title="Reports"
-                body="Burndown, velocity, and CFD ship in Phase 2."
-              />
-            }
-          />
-          <Route
-            path="issues"
-            element={<ProjectPlaceholderPage title="Issues" />}
-          />
-          <Route
-            path="releases"
-            element={
-              <ProjectPlaceholderPage
-                title="Releases"
-                body="Versions and release notes ship in Phase 3."
-              />
-            }
-          />
-          <Route
-            path="components"
-            element={
-              <ProjectPlaceholderPage
-                title="Components"
-                body="Component ownership ships in Phase 3."
-              />
-            }
-          />
+          <Route path="list" element={<IssuesNavigatorPage />} />
+          <Route path="reports" element={<ReportsPage />} />
+          <Route path="issues" element={<IssuesNavigatorPage />} />
+          <Route path="releases" element={<ReleasesPage />} />
+          <Route path="components" element={<ComponentsPage />} />
           <Route
             path="settings"
             element={

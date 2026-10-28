@@ -1,5 +1,24 @@
 from django.urls import path
 
+from apps.projects.governance_views import (
+    ComponentListCreateView,
+    MePermissionsView,
+    NotificationListView,
+    NotificationMarkReadView,
+    ReleaseDetailView,
+    ReleaseListCreateView,
+    ReleaseNotesView,
+    ReleasePublishView,
+)
+from apps.projects.report_views import (
+    BreakdownReportView,
+    BurndownReportView,
+    CfdReportView,
+    CreatedVsResolvedReportView,
+    ProjectSummaryReportView,
+    SprintReportView,
+    VelocityReportView,
+)
 from apps.projects.views import (
     OnboardingView,
     ProjectArchiveView,
@@ -72,4 +91,77 @@ urlpatterns = [
         OnboardingView.as_view(),
         name="workspace-onboarding",
     ),
+    # Reports
+    path(
+        "workspaces/<slug:slug>/projects/<str:project_key>/sprints/<uuid:sprint_id>/burndown/",
+        BurndownReportView.as_view(),
+        name="project-sprint-burndown",
+    ),
+    path(
+        "workspaces/<slug:slug>/projects/<str:project_key>/sprints/<uuid:sprint_id>/report/",
+        SprintReportView.as_view(),
+        name="project-sprint-report",
+    ),
+    path(
+        "workspaces/<slug:slug>/projects/<str:project_key>/reports/velocity/",
+        VelocityReportView.as_view(),
+        name="project-velocity",
+    ),
+    path(
+        "workspaces/<slug:slug>/projects/<str:project_key>/reports/cfd/",
+        CfdReportView.as_view(),
+        name="project-cfd",
+    ),
+    path(
+        "workspaces/<slug:slug>/projects/<str:project_key>/reports/created-vs-resolved/",
+        CreatedVsResolvedReportView.as_view(),
+        name="project-created-vs-resolved",
+    ),
+    path(
+        "workspaces/<slug:slug>/projects/<str:project_key>/reports/breakdown/",
+        BreakdownReportView.as_view(),
+        name="project-breakdown",
+    ),
+    path(
+        "workspaces/<slug:slug>/projects/<str:project_key>/reports/summary/",
+        ProjectSummaryReportView.as_view(),
+        name="project-summary-report",
+    ),
+    # Releases & components
+    path(
+        "workspaces/<slug:slug>/projects/<str:project_key>/releases/",
+        ReleaseListCreateView.as_view(),
+        name="project-releases",
+    ),
+    path(
+        "workspaces/<slug:slug>/projects/<str:project_key>/releases/<uuid:release_id>/",
+        ReleaseDetailView.as_view(),
+        name="project-release-detail",
+    ),
+    path(
+        "workspaces/<slug:slug>/projects/<str:project_key>/releases/<uuid:release_id>/publish/",
+        ReleasePublishView.as_view(),
+        name="project-release-publish",
+    ),
+    path(
+        "workspaces/<slug:slug>/projects/<str:project_key>/releases/<uuid:release_id>/notes/",
+        ReleaseNotesView.as_view(),
+        name="project-release-notes",
+    ),
+    path(
+        "workspaces/<slug:slug>/projects/<str:project_key>/components/",
+        ComponentListCreateView.as_view(),
+        name="project-components",
+    ),
+    path(
+        "workspaces/<slug:slug>/notifications/",
+        NotificationListView.as_view(),
+        name="workspace-notifications",
+    ),
+    path(
+        "workspaces/<slug:slug>/notifications/<uuid:notification_id>/read/",
+        NotificationMarkReadView.as_view(),
+        name="workspace-notification-read",
+    ),
+    path("me/permissions/", MePermissionsView.as_view(), name="me-permissions"),
 ]

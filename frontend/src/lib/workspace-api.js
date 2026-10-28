@@ -184,6 +184,111 @@ export function updateOnboarding(slug, payload) {
   return api.patch(`/workspaces/${slug}/onboarding/`, payload).then((r) => r.data)
 }
 
+export function fetchBurndown(slug, projectKey, sprintId) {
+  return api
+    .get(
+      `/workspaces/${slug}/projects/${projectKey}/sprints/${sprintId}/burndown/`,
+    )
+    .then((r) => r.data)
+}
+
+export function fetchVelocity(slug, projectKey) {
+  return api
+    .get(`/workspaces/${slug}/projects/${projectKey}/reports/velocity/`)
+    .then((r) => r.data)
+}
+
+export function fetchCfd(slug, projectKey, params = {}) {
+  return api
+    .get(`/workspaces/${slug}/projects/${projectKey}/reports/cfd/`, { params })
+    .then((r) => r.data)
+}
+
+export function fetchCreatedVsResolved(slug, projectKey) {
+  return api
+    .get(
+      `/workspaces/${slug}/projects/${projectKey}/reports/created-vs-resolved/`,
+    )
+    .then((r) => r.data)
+}
+
+export function fetchBreakdown(slug, projectKey, by = 'priority') {
+  return api
+    .get(`/workspaces/${slug}/projects/${projectKey}/reports/breakdown/`, {
+      params: { by },
+    })
+    .then((r) => r.data)
+}
+
+export function fetchProjectSummary(slug, projectKey) {
+  return api
+    .get(`/workspaces/${slug}/projects/${projectKey}/reports/summary/`)
+    .then((r) => r.data)
+}
+
+export function fetchIssueNavigator(slug, params = {}) {
+  return api
+    .get(`/workspaces/${slug}/issue-navigator/`, { params })
+    .then((r) => r.data)
+}
+
+export function fetchWorkspaceSearch(slug, q) {
+  return api
+    .get(`/workspaces/${slug}/search/`, { params: { q } })
+    .then((r) => r.data)
+}
+
+export function fetchReleases(slug, projectKey) {
+  return api
+    .get(`/workspaces/${slug}/projects/${projectKey}/releases/`)
+    .then((r) => r.data)
+}
+
+export function createRelease(slug, projectKey, payload) {
+  return api
+    .post(`/workspaces/${slug}/projects/${projectKey}/releases/`, payload)
+    .then((r) => r.data)
+}
+
+export function fetchReleaseDetail(slug, projectKey, releaseId) {
+  return api
+    .get(`/workspaces/${slug}/projects/${projectKey}/releases/${releaseId}/`)
+    .then((r) => r.data)
+}
+
+export function publishRelease(slug, projectKey, releaseId, payload = {}) {
+  return api
+    .post(
+      `/workspaces/${slug}/projects/${projectKey}/releases/${releaseId}/publish/`,
+      payload,
+    )
+    .then((r) => r.data)
+}
+
+export function fetchReleaseNotes(slug, projectKey, releaseId) {
+  return api
+    .get(
+      `/workspaces/${slug}/projects/${projectKey}/releases/${releaseId}/notes/`,
+    )
+    .then((r) => r.data)
+}
+
+export function fetchComponents(slug, projectKey) {
+  return api
+    .get(`/workspaces/${slug}/projects/${projectKey}/components/`)
+    .then((r) => r.data)
+}
+
+export function createComponent(slug, projectKey, payload) {
+  return api
+    .post(`/workspaces/${slug}/projects/${projectKey}/components/`, payload)
+    .then((r) => r.data)
+}
+
+export function fetchNotifications(slug) {
+  return api.get(`/workspaces/${slug}/notifications/`).then((r) => r.data)
+}
+
 export function unwrapList(data) {
   if (Array.isArray(data)) return data
   if (data?.results) return data.results

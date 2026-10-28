@@ -76,6 +76,13 @@ class Project(models.Model):
         return f"{self.key} — {self.name}"
 
 
-# Re-export workflow / sprint models for convenient imports.
+# Re-export workflow / sprint / governance models for convenient imports.
 from apps.projects.workflow_models import IssueType, Transition, WorkflowStatus  # noqa: E402,F401
 from apps.projects.sprint_models import Sprint  # noqa: E402,F401
+from apps.projects.governance_models import (  # noqa: E402,F401
+    Component,
+    Notification,
+    NotificationPreference,
+    ProjectMembership,
+    Release,
+)

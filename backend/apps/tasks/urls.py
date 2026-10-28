@@ -1,5 +1,6 @@
 from django.urls import path
 
+from apps.tasks.search_views import GlobalSearchView, IssueNavigatorView
 from apps.tasks.views import (
     BacklogView,
     BoardTasksView,
@@ -81,5 +82,15 @@ urlpatterns = [
         "issues/<uuid:task_id>/rank/",
         IssueRankView.as_view(),
         name="issue-rank",
+    ),
+    path(
+        "workspaces/<slug:slug>/issue-navigator/",
+        IssueNavigatorView.as_view(),
+        name="issue-navigator",
+    ),
+    path(
+        "workspaces/<slug:slug>/search/",
+        GlobalSearchView.as_view(),
+        name="workspace-search",
     ),
 ]
