@@ -44,9 +44,12 @@ export function ProjectsPage() {
         <h1 className="font-display text-3xl text-ink sm:text-4xl">
           Projects ({projects.length} active, {archived.length} archived)
         </h1>
-        <Button type="button" onClick={() => setShowCreate(true)}>
+        <Link
+          to={`/app/${workspaceSlug}/projects/new`}
+          className="inline-flex items-center rounded-md bg-[var(--text)] px-3 py-2 text-sm font-semibold text-[var(--bg)]"
+        >
           + New Project
-        </Button>
+        </Link>
       </div>
 
       <div className="mt-6">

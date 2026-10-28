@@ -21,6 +21,12 @@ import {
   fetchWorkspaces,
   unwrapList,
 } from '@/lib/workspace-api'
+import { OnboardingChecklist } from '@/features/onboarding/OnboardingChecklist'
+import { GuidedTour } from '@/features/onboarding/GuidedTour'
+import {
+  CommandPalette,
+  RestartTourButton,
+} from '@/features/search/CommandPalette'
 
 const SIDEBAR_WIDTH = 246
 const MOBILE_BP = 768
@@ -148,14 +154,15 @@ export function AppShell() {
 
       <div className="px-3 py-3">
         <Link
-          to={`/app/${workspaceSlug}/projects`}
+          to={`/app/${workspaceSlug}/projects/new`}
           className="flex w-full items-center justify-center gap-2 rounded-md bg-ink px-3 py-2 text-sm font-semibold text-paper transition hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
           onClick={() => setDrawerOpen(false)}
         >
           <Plus className="h-4 w-4" />
-          New Task
+          New project
         </Link>
       </div>
+      <OnboardingChecklist />
 
       <nav className="flex-1 space-y-1 overflow-y-auto px-3 pb-4" aria-labelledby={drawerTitleId}>
         <p id={drawerTitleId} className="sr-only">
@@ -235,6 +242,9 @@ export function AppShell() {
           <Settings className="h-4 w-4" />
           Settings
         </NavLink>
+        <div className="px-3 pt-1">
+          <RestartTourButton />
+        </div>
         <div className="mt-2 flex items-center gap-2 rounded-md px-2 py-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-mint text-xs font-semibold text-brand">
             {(user?.full_name || user?.email || '?')
@@ -310,8 +320,10 @@ export function AppShell() {
           </div>
           <ThemeToggle />
         </header>
-        <main className="flex-1 overflow-y-auto bg-surface">
+        <main className="relative flex-1 overflow-y-auto bg-surface">
           <Outlet />
+          <GuidedTour />
+          <CommandPalette />
         </main>
       </div>
     </div>

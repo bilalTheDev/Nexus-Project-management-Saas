@@ -24,22 +24,122 @@ export function createProject(slug, payload) {
   return api.post(`/workspaces/${slug}/projects/`, payload).then((r) => r.data)
 }
 
-export function fetchBoard(slug, projectKey) {
+export function fetchProject(slug, projectKey) {
   return api
-    .get(`/workspaces/${slug}/projects/${projectKey}/board/`)
+    .get(`/workspaces/${slug}/projects/${projectKey}/`)
     .then((r) => r.data)
 }
 
+export function fetchProjectTemplates() {
+  return api.get('/project-templates/').then((r) => r.data)
+}
+
+export function checkProjectKey(slug, key) {
+  return api
+    .get(`/workspaces/${slug}/projects/key-check/`, { params: { key } })
+    .then((r) => r.data)
+}
+
+export function fetchWorkflow(slug, projectKey) {
+  return api
+    .get(`/workspaces/${slug}/projects/${projectKey}/workflow/`)
+    .then((r) => r.data)
+}
+
+export function fetchBoard(slug, projectKey, params = {}) {
+  return api
+    .get(`/workspaces/${slug}/projects/${projectKey}/board/`, { params })
+    .then((r) => r.data)
+}
+
+export function fetchBacklog(slug, projectKey) {
+  return api
+    .get(`/workspaces/${slug}/projects/${projectKey}/backlog/`)
+    .then((r) => r.data)
+}
+
+export function fetchSprints(slug, projectKey) {
+  return api
+    .get(`/workspaces/${slug}/projects/${projectKey}/sprints/`)
+    .then((r) => r.data)
+}
+
+export function createSprint(slug, projectKey, payload) {
+  return api
+    .post(`/workspaces/${slug}/projects/${projectKey}/sprints/`, payload)
+    .then((r) => r.data)
+}
+
+export function startSprint(slug, projectKey, sprintId, payload = {}) {
+  return api
+    .post(
+      `/workspaces/${slug}/projects/${projectKey}/sprints/${sprintId}/start/`,
+      payload,
+    )
+    .then((r) => r.data)
+}
+
+export function completeSprint(slug, projectKey, sprintId, payload = {}) {
+  return api
+    .post(
+      `/workspaces/${slug}/projects/${projectKey}/sprints/${sprintId}/complete/`,
+      payload,
+    )
+    .then((r) => r.data)
+}
+
+export function fetchIssue(issueId) {
+  return api.get(`/issues/${issueId}/`).then((r) => r.data)
+}
+
 export function fetchTask(taskId) {
-  return api.get(`/tasks/${taskId}/`).then((r) => r.data)
+  return fetchIssue(taskId)
+}
+
+export function updateIssue(issueId, payload) {
+  return api.patch(`/issues/${issueId}/`, payload).then((r) => r.data)
 }
 
 export function updateTask(taskId, payload) {
-  return api.patch(`/tasks/${taskId}/`, payload).then((r) => r.data)
+  return updateIssue(taskId, payload)
+}
+
+export function updateIssuePosition(issueId, payload) {
+  return api.patch(`/issues/${issueId}/position/`, payload).then((r) => r.data)
 }
 
 export function updateTaskPosition(taskId, payload) {
-  return api.patch(`/tasks/${taskId}/position/`, payload).then((r) => r.data)
+  return updateIssuePosition(taskId, payload)
+}
+
+export function fetchIssueTransitions(issueId) {
+  return api.get(`/issues/${issueId}/transitions/`).then((r) => r.data)
+}
+
+export function applyIssueTransition(issueId, payload) {
+  return api.post(`/issues/${issueId}/transitions/`, payload).then((r) => r.data)
+}
+
+export function fetchIssueHistory(issueId) {
+  return api.get(`/issues/${issueId}/history/`).then((r) => r.data)
+}
+
+export function fetchIssueLinks(issueId) {
+  return api.get(`/issues/${issueId}/links/`).then((r) => r.data)
+}
+
+export function createIssueLink(issueId, payload) {
+  return api.post(`/issues/${issueId}/links/`, payload).then((r) => r.data)
+}
+
+export function rankIssue(issueId, payload) {
+  return api.patch(`/issues/${issueId}/rank/`, payload).then((r) => r.data)
+}
+
+export function createIssue(slug, projectKey, payload) {
+  return api
+    .post(`/workspaces/${slug}/projects/${projectKey}/issues/`, payload)
+    .then((r) => r.data)
 }
 
 export function fetchComments(taskId) {
@@ -74,6 +174,14 @@ export function fetchActivity(slug, params = {}) {
 
 export function fetchActivityStats(slug) {
   return api.get(`/workspaces/${slug}/activity/stats/`).then((r) => r.data)
+}
+
+export function fetchOnboarding(slug) {
+  return api.get(`/workspaces/${slug}/onboarding/`).then((r) => r.data)
+}
+
+export function updateOnboarding(slug, payload) {
+  return api.patch(`/workspaces/${slug}/onboarding/`, payload).then((r) => r.data)
 }
 
 export function unwrapList(data) {

@@ -8,6 +8,7 @@ import { createWorkspace } from '@/lib/workspace-api'
 export function WorkspaceCreatePage() {
   const [name, setName] = useState('')
   const [slug, setSlug] = useState('')
+  const [teamType, setTeamType] = useState('software')
   const [error, setError] = useState('')
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -16,7 +17,7 @@ export function WorkspaceCreatePage() {
     mutationFn: createWorkspace,
     onSuccess: (ws) => {
       queryClient.invalidateQueries({ queryKey: ['workspaces'] })
-      navigate(`/app/${ws.slug}/dashboard`, { replace: true })
+      navigate(`/app/${ws.slug}/projects/new`, { replace: true })
     },
     onError: (err) => {
       const detail = err.response?.data
@@ -44,7 +45,7 @@ export function WorkspaceCreatePage() {
           onSubmit={(e) => {
             e.preventDefault()
             setError('')
-            mutation.mutate({ name, slug })
+            mutation.mutate({ name, slug, team_type: teamType })
           }}
         >
           <p className="font-mono text-xs uppercase tracking-widest text-brand">
@@ -78,6 +79,20 @@ export function WorkspaceCreatePage() {
                 required
               />
             </div>
+          </label>
+
+          <label className="mt-4 block text-sm font-medium text-ink">
+            Team type
+            <select
+              className="mt-1 w-full rounded-md border border-border bg-paper px-3 py-2"
+              value={teamType}
+              onChange={(e) => setTeamType(e.target.value)}
+            >
+              <option value="software">Software</option>
+              <option value="business">Business</option>
+              <option value="marketing">Marketing</option>
+              <option value="other">Other</option>
+            </select>
           </label>
 
           {error ? (
