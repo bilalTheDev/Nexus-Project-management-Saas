@@ -20,5 +20,47 @@ export function getPreferredTheme() {
 }
 
 export function applyTheme(theme) {
-  document.documentElement.setAttribute('data-theme', theme)
+  const root = document.documentElement
+  root.setAttribute('data-theme', theme)
+  root.style.colorScheme = theme === 'dark' ? 'dark' : 'light'
+}
+
+/** Toggle theme with optional circular view-transition from a click point. */
+export function toggleThemeWithTransition(nextTheme, originEvent) {
+  const reduceMotion =
+    typeof window !== 'undefined' &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+  const apply = () => {
+    applyTheme(nextTheme)
+    try {
+      localStorage.setItem(STORAGE_KEY, nextTheme)
+    } catch {
+      /* ignore */
+    }
+  }
+
+  if (
+    reduceMotion ||
+    typeof document.startViewTransition !== 'function' ||
+    !originEvent
+  ) {
+    apply()
+    return
+  }
+
+  const x = originEvent.clientX
+  const y = originEvent.clientY
+  const root = document.documentElement
+  root.style.setProperty('--theme-x', `${x}px`)
+  root.style.setProperty('--theme-y', `${y}px`)
+  root.classList.add('theme-vt-active')
+
+  const transition = document.startViewTransition(() => {
+    apply()
+  })
+
+  transition.finished.finally(() => {
+    root.classList.remove('theme-vt-active')
+  })
 }

@@ -123,7 +123,7 @@ export function LoginPage() {
               type="button"
               disabled={busy}
               onClick={() => signInAsDemo(user)}
-              className="rounded-lg border border-border bg-surface px-3 py-2 text-left text-xs font-medium text-ink hover:bg-surface-low focus-ring disabled:opacity-60"
+              className="btn-lift rounded-lg border border-border bg-surface-raised px-3 py-2 text-left text-xs font-medium text-ink shadow-hairline hover:bg-surface-low focus-ring disabled:opacity-60"
             >
               {demoLoading === user.email
                 ? `Signing in as ${user.label.split(' (')[0]}…`
@@ -137,7 +137,7 @@ export function LoginPage() {
         {formError ? (
           <div
             role="alert"
-            className="rounded-lg border border-red-300/60 bg-red-50 px-3 py-2 text-sm text-red-800 dark:border-red-500/30 dark:bg-red-950/40 dark:text-red-200"
+            className="rounded-lg border border-danger/30 bg-danger-soft px-3 py-2 text-sm text-danger"
           >
             {formError}
           </div>
@@ -202,14 +202,14 @@ function Field({ label, error, children }) {
       <span className="mb-1.5 block text-sm font-medium text-ink">{label}</span>
       {children}
       {error ? (
-        <span className="mt-1 block text-xs text-red-600">{error}</span>
+        <span className="mt-1 block text-xs text-danger">{error}</span>
       ) : null}
     </label>
   )
 }
 
 function inputClass(error) {
-  return `w-full rounded-lg border bg-paper px-3 py-2.5 text-sm text-ink placeholder:text-ink-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-brand ${
-    error ? 'border-red-400' : 'border-border'
+  return `w-full rounded-lg border bg-surface-low px-3 py-2.5 text-sm text-ink placeholder:text-ink-muted shadow-hairline focus:outline-none focus-visible:ring-2 focus-visible:ring-brand ${
+    error ? 'border-danger' : 'border-border'
   }`
 }

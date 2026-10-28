@@ -43,6 +43,7 @@ export function OverviewPage() {
           value={String(metrics.overdue)}
           hint="Requires action"
           danger={metrics.overdue > 0}
+          emphasis={metrics.overdue > 0}
         />
         <Metric
           label="Completed"
@@ -56,7 +57,7 @@ export function OverviewPage() {
           <h2 className="font-display text-xl text-ink">
             Tasks Requiring Attention
           </h2>
-          <ul className="mt-3 divide-y divide-border rounded-lg border border-border bg-paper">
+          <ul className="surface-card mt-3 divide-y divide-border overflow-hidden">
             {urgent_tasks.length === 0 ? (
               <li className="px-4 py-6 text-sm text-ink-muted">
                 No urgent items right now.
@@ -66,7 +67,7 @@ export function OverviewPage() {
                 <li key={task.id}>
                   <Link
                     to={`/app/${workspaceSlug}/tasks/${task.id}`}
-                    className="flex flex-wrap items-center gap-3 px-4 py-3 hover:bg-surface-low focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                    className="row-raise flex flex-wrap items-center gap-3 px-4 py-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                   >
                     <span className="font-mono text-xs text-ink-muted">
                       {task.task_key}
@@ -90,7 +91,7 @@ export function OverviewPage() {
               <Link
                 key={project.id}
                 to={`/app/${workspaceSlug}/projects/${project.key}/board`}
-                className="rounded-lg border border-border bg-paper p-4 hover:border-border-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                className="surface-card surface-card-hover block p-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
               >
                 <div className="flex items-start justify-between gap-2">
                   <div>
@@ -110,8 +111,8 @@ export function OverviewPage() {
                   />
                 </div>
                 <p className="mt-2 text-xs text-ink-muted">
-                  {project.resolved} of {project.total} resolved · {project.open_tasks}{' '}
-                  open
+                  {project.resolved} of {project.total} resolved ·{' '}
+                  {project.open_tasks} open
                 </p>
               </Link>
             ))}
@@ -119,7 +120,7 @@ export function OverviewPage() {
         </section>
 
         <aside className="space-y-4">
-          <div className="rounded-lg border border-border bg-paper p-4">
+          <div className="surface-card p-4">
             <h2 className="font-display text-lg text-ink">Recent Activity</h2>
             <ul className="mt-3 space-y-3">
               {recent_activity.map((event) => (
@@ -127,14 +128,14 @@ export function OverviewPage() {
                   <p className="text-ink">
                     {event.actor?.full_name || 'System'} {event.summary}
                   </p>
-                  <p className="text-xs text-ink-muted">
+                  <p className="font-mono text-xs text-ink-muted">
                     {new Date(event.created_at).toLocaleString()}
                   </p>
                 </li>
               ))}
             </ul>
           </div>
-          <div className="rounded-lg border border-brand/30 bg-mint/40 p-4">
+          <div className="rounded-xl border border-brand/25 bg-mint/50 p-4 shadow-hairline">
             <p className="font-mono text-[10px] uppercase tracking-widest text-brand">
               Studio Handbook
             </p>
@@ -151,24 +152,28 @@ export function OverviewPage() {
 
 function PageFrame({ eyebrow, title, children }) {
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
+    <div className="relative mx-auto max-w-6xl px-4 py-8 sm:px-6">
       {eyebrow ? (
         <p className="font-mono text-[10px] uppercase tracking-widest text-ink-muted">
           {eyebrow}
         </p>
       ) : null}
-      <h1 className="mt-1 font-display text-3xl text-ink sm:text-4xl">{title}</h1>
+      <h1 className="mt-1 font-display text-3xl tracking-tight text-ink sm:text-4xl">
+        {title}
+      </h1>
       <div className="mt-6">{children}</div>
     </div>
   )
 }
 
-function Metric({ label, value, hint, danger }) {
+function Metric({ label, value, hint, danger, emphasis }) {
   return (
-    <div className="rounded-lg border border-border bg-paper p-4">
+    <div
+      className={`surface-card surface-card-hover p-4 ${emphasis ? 'glow-accent' : ''}`}
+    >
       <p className="text-xs uppercase tracking-wide text-ink-muted">{label}</p>
       <p
-        className={`mt-1 font-display text-3xl ${danger ? 'text-red-700' : 'text-ink'}`}
+        className={`mt-1 font-display text-3xl tracking-tight ${danger ? 'text-danger' : 'text-ink'}`}
       >
         {value}
       </p>
@@ -179,10 +184,10 @@ function Metric({ label, value, hint, danger }) {
 
 export function PriorityPill({ priority }) {
   const styles = {
-    urgent: 'bg-red-100 text-red-800',
-    high: 'bg-amber-100 text-amber-900',
-    medium: 'bg-slate-100 text-slate-700',
-    low: 'bg-stone-100 text-stone-600',
+    urgent: 'bg-danger-soft text-danger',
+    high: 'bg-warning-soft text-warning',
+    medium: 'bg-surface-low text-ink-secondary',
+    low: 'bg-surface-low text-ink-muted',
   }
   return (
     <span
@@ -195,7 +200,8 @@ export function PriorityPill({ priority }) {
 
 export function StatusPill({ status }) {
   return (
-    <span className="rounded-full bg-surface-low px-2 py-0.5 font-mono text-[10px] uppercase text-ink-secondary">
+    <span className="inline-flex items-center gap-1.5 rounded-full bg-surface-low px-2 py-0.5 font-mono text-[10px] uppercase text-ink-secondary">
+      <span className="status-dot text-brand" aria-hidden />
       {status?.replaceAll('_', ' ')}
     </span>
   )

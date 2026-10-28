@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
@@ -15,20 +15,37 @@
       rel="stylesheet"
     />
     <title>Nexus — Project Management for Focused Teams</title>
+    <link
+      rel="preload"
+      href="/fonts/newsreader-latin-wght-normal.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      href="/fonts/newsreader-latin-wght-italic.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
     <script>
       (function () {
+        var theme = 'light'
         try {
           var stored = localStorage.getItem('nexus-theme')
-          var theme =
+          theme =
             stored === 'light' || stored === 'dark'
               ? stored
               : window.matchMedia('(prefers-color-scheme: dark)').matches
                 ? 'dark'
                 : 'light'
-          document.documentElement.setAttribute('data-theme', theme)
         } catch (e) {
-          document.documentElement.setAttribute('data-theme', 'light')
+          theme = 'light'
         }
+        var root = document.documentElement
+        root.setAttribute('data-theme', theme)
+        root.style.colorScheme = theme
       })()
     </script>
   </head>
