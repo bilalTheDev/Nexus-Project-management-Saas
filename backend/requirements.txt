@@ -1,5 +1,5 @@
 Django[argon2]==5.2.17
-djangorestframework==3.18.0
+djangorestframework==3.18.2
 django-cors-headers==4.9.0
 django-csp==4.0
 django-filter==26.2

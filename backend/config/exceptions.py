@@ -87,9 +87,7 @@ def nexus_exception_handler(exc, context):
         # Drop nested code/detail used only for message construction
         if isinstance(details, dict):
             details = {
-                k: v
-                for k, v in details.items()
-                if k not in ("detail", "code") or k == "version"
+                k: v for k, v in details.items() if k not in ("detail", "code") or k == "version"
             }
             if not details:
                 details = None
@@ -105,9 +103,7 @@ def nexus_exception_handler(exc, context):
 
     # Unhandled exception — log server-side; never return a traceback.
     request = context.get("request")
-    request_id = getattr(getattr(request, "request_id", None), "__str__", lambda: None)()
-    if request is not None:
-        request_id = getattr(request, "request_id", None)
+    request_id = getattr(request, "request_id", None) if request is not None else None
     logger.exception(
         "unhandled_api_exception",
         extra={"request_id": request_id, "path": getattr(request, "path", None)},

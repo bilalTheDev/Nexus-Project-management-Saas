@@ -1,6 +1,7 @@
 """Smoke tests for Part D/E hardening (health, error envelope, pagination)."""
 
-from django.test import Client, SimpleTestCase, TestCase, override_settings
+from django.test import Client, SimpleTestCase, TestCase
+from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.test import APIRequestFactory
 from rest_framework.views import APIView
@@ -8,7 +9,6 @@ from rest_framework.views import APIView
 from config.exceptions import nexus_exception_handler
 from config.pagination import NexusPagination
 from config.serializers import StrictFieldsMixin
-from rest_framework import serializers
 
 
 class HealthEndpointsTests(TestCase):

@@ -6,7 +6,7 @@ import json
 import logging
 import re
 import threading
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 _request_id = threading.local()
 
@@ -82,7 +82,7 @@ class RedactingJsonFormatter(logging.Formatter):
 
     def format(self, record: logging.LogRecord) -> str:
         payload = {
-            "ts": datetime.now(timezone.utc).isoformat(),
+            "ts": datetime.now(UTC).isoformat(),
             "level": record.levelname,
             "logger": record.name,
             "message": redact_string(record.getMessage()),

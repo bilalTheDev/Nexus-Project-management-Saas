@@ -11,7 +11,5 @@ class StrictFieldsMixin:
             allowed = set(self.fields.keys())
             unknown = [key for key in data.keys() if key not in allowed]
             if unknown:
-                raise serializers.ValidationError(
-                    {field: "Unknown field." for field in unknown}
-                )
+                raise serializers.ValidationError({field: "Unknown field." for field in unknown})
         return super().to_internal_value(data)

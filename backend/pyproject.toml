@@ -8,6 +8,7 @@ extend-exclude = ["**/migrations/**"]
 select = ["E", "F", "I", "B", "UP"]
 ignore = [
   "E501",  # line length handled separately; serializers are often long
+  "UP038",  # isinstance X | Y — keep tuple form for readability
 ]
 
 [tool.ruff.lint.per-file-ignores]

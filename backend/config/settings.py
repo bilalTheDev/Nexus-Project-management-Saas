@@ -5,21 +5,22 @@ Environment-driven configuration for local development and production
 (PythonAnywhere + Neon + Vercel). See backend/.env.example.
 """
 
+import os
+import sys
 from datetime import timedelta
 from pathlib import Path
-import sys
 
 import dj_database_url
 from django.core.exceptions import ImproperlyConfigured
 from dotenv import load_dotenv
-import os
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 REPO_ROOT = BASE_DIR.parent
 
-# Load Neon-managed vars from repo root (.env.local), then backend/.env overrides.
+# Load Neon-managed vars from repo root (.env.local), then backend/.env.
+# Existing process environment always wins (12-factor / PA / CI).
 load_dotenv(REPO_ROOT / ".env.local")
-load_dotenv(BASE_DIR / ".env", override=True)
+load_dotenv(BASE_DIR / ".env")
 
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "django-insecure-dev-only-change-me")
 DEBUG = os.getenv("DJANGO_DEBUG", "True").lower() in ("1", "true", "yes")
@@ -170,9 +171,7 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # Reject oversized multipart / memory uploads (bytes).
-DATA_UPLOAD_MAX_MEMORY_SIZE = int(
-    os.getenv("DATA_UPLOAD_MAX_MEMORY_SIZE", str(2 * 1024 * 1024))
-)
+DATA_UPLOAD_MAX_MEMORY_SIZE = int(os.getenv("DATA_UPLOAD_MAX_MEMORY_SIZE", str(2 * 1024 * 1024)))
 FILE_UPLOAD_MAX_MEMORY_SIZE = DATA_UPLOAD_MAX_MEMORY_SIZE
 
 CORS_ALLOWED_ORIGINS = [
@@ -220,9 +219,7 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
-    "DEFAULT_PERMISSION_CLASSES": (
-        "rest_framework.permissions.IsAuthenticated",
-    ),
+    "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
     "DEFAULT_FILTER_BACKENDS": (
         "django_filters.rest_framework.DjangoFilterBackend",
         "rest_framework.filters.SearchFilter",
@@ -265,9 +262,11 @@ JWT_REFRESH_COOKIE_NAME = "nexus_refresh"
 JWT_REFRESH_COOKIE_SAMESITE = os.getenv("JWT_REFRESH_COOKIE_SAMESITE", "").strip() or None
 
 # Password-reset debug tokens (uid/token in JSON) — never enable in production.
-ALLOW_PASSWORD_RESET_DEBUG = os.getenv(
-    "ALLOW_PASSWORD_RESET_DEBUG", "False"
-).lower() in ("1", "true", "yes")
+ALLOW_PASSWORD_RESET_DEBUG = os.getenv("ALLOW_PASSWORD_RESET_DEBUG", "False").lower() in (
+    "1",
+    "true",
+    "yes",
+)
 
 # django-axes: lockout keyed by account + IP
 AXES_FAILURE_LIMIT = int(os.getenv("AXES_FAILURE_LIMIT", "5"))
@@ -322,6 +321,12 @@ if not DEBUG:
         "true",
         "yes",
     )
+    # Intentionally off until preload is a conscious ops decision (see docs/DEPLOYMENT.md).
+    if not SECURE_HSTS_PRELOAD:
+        SILENCED_SYSTEM_CHECKS = [
+            *globals().get("SILENCED_SYSTEM_CHECKS", []),
+            "security.W021",
+        ]
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     SECURE_CONTENT_TYPE_NOSNIFF = True

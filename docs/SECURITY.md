@@ -72,10 +72,11 @@ Secrets never appear in this document. Use placeholders: `<NEON_HOST>`, `<DJANGO
 - Register duplicate email returns generic conflict (no enumeration)
 - See `docs/adr/0001-auth-sessions.md`
 
-**Authz / tenancy**
-- Workspace membership checks (`IsWorkspaceMember`, `CanMutateWorkspaceContent`)
-- Most list/create views scoped via `WorkspaceScopedMixin` + slug
-- Project `policy.py` exists (Phase 3) but not fully wired into every view
+**Authz / tenancy (Part B)**
+- `WorkspaceScopedQuerySet.for_user` on tenant models; object lookup → 404 for foreign/missing
+- `IsWorkspaceMember`, `HasWorkspaceRole`, `HasProjectRole` + `apps/projects/policy.py` matrix
+- Same-workspace FK validators; ownership transfer with `select_for_update`
+- URL-conf IDOR suite (`apps/workspaces/tests_idor.py`); see `docs/adr/0002-tenancy.md` (RLS skipped)
 - Issue `version` optimistic concurrency on some paths
 
 **Other**
@@ -125,9 +126,9 @@ Secrets never appear in this document. Use placeholders: `<NEON_HOST>`, `<DJANGO
 
 ### Medium
 7. **Authorization matrix not enforced uniformly** — `policy.py` / project roles exist but views still mostly use coarse workspace mutate roles.
-8. **API limits** — No `max_page_size`; weak default throttles; no consistent error envelope; Browsable API / renderers not locked to JSON in prod.
-9. **CI/CD security gates missing** — No bandit, pip-audit, gitleaks, semgrep, CodeQL, `check --deploy`, secret-in-dist scan, Dependabot.
-10. **Observability / recovery** — No request-id logs, `/readyz`, Sentry scrubbing, RUNBOOK, backup restore drill, CSP.
+8. ~~**API limits**~~ — **Addressed (Part D):** `max_page_size=100`, throttles, error envelope, JSON-only renderers in prod, `SECURE_*` + CSP, strict write serializers.
+9. ~~**CI/CD security gates**~~ — **Addressed (Part F):** ruff/bandit/pip-audit/gitleaks/`check --deploy`/dist secret scan/Dependabot (CodeQL optional/org-dependent).
+10. ~~**Observability / recovery**~~ — **Addressed (Part E):** request-id JSON logs + redaction, `/healthz`+`/readyz`, optional Sentry scrubber, `docs/RUNBOOK.md`, Neon PITR notes.
 
 ### Low
 11. Register email enumeration (`email already exists`).

@@ -47,7 +47,7 @@ def main() -> int:
     if args.update or not SNAPSHOT.exists():
         SNAPSHOT.parent.mkdir(parents=True, exist_ok=True)
         SNAPSHOT.write_text(current_text, encoding="utf-8")
-        print(f"Wrote schema snapshot → {SNAPSHOT.relative_to(REPO_ROOT)}")
+        print(f"Wrote schema snapshot -> {SNAPSHOT.relative_to(REPO_ROOT)}")
         return 0
 
     expected_text = SNAPSHOT.read_text(encoding="utf-8")
