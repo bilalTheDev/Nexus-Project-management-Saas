@@ -7,6 +7,8 @@ export const api = axios.create({
   baseURL,
   headers: {
     'Content-Type': 'application/json',
+    // CSRF defence for cookie-authenticated auth endpoints (refresh/logout).
+    'X-Requested-With': 'XMLHttpRequest',
   },
   withCredentials: true,
 })
@@ -15,6 +17,9 @@ api.interceptors.request.use((config) => {
   const token = getAccessToken()
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
+  }
+  if (!config.headers['X-Requested-With']) {
+    config.headers['X-Requested-With'] = 'XMLHttpRequest'
   }
   return config
 })

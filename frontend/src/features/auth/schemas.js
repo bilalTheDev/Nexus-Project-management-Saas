@@ -2,7 +2,7 @@ import { z } from 'zod'
 
 export const loginSchema = z.object({
   email: z.email('Please enter a valid work email address'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
+  password: z.string().min(1, 'Password is required'),
   rememberMe: z.boolean().optional(),
 })
 
@@ -12,10 +12,10 @@ export const signupSchema = z
     email: z.email('Please enter a valid work email address'),
     password: z
       .string()
-      .min(8, 'Password must be at least 8 characters')
+      .min(10, 'Password must be at least 10 characters')
       .regex(/[A-Z]/, 'Include at least one uppercase letter')
       .regex(/[0-9]/, 'Include at least one number'),
-    confirm_password: z.string().min(8, 'Confirm your password'),
+    confirm_password: z.string().min(10, 'Confirm your password'),
     accept_terms: z.boolean().refine((value) => value === true, {
       message: 'You must accept the terms to continue',
     }),
@@ -28,7 +28,7 @@ export const signupSchema = z
 export function passwordStrength(password) {
   let score = 0
   if (!password) return 0
-  if (password.length >= 8) score += 1
+  if (password.length >= 10) score += 1
   if (/[A-Z]/.test(password)) score += 1
   if (/[0-9]/.test(password)) score += 1
   if (/[^A-Za-z0-9]/.test(password)) score += 1
