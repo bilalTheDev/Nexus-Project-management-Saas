@@ -62,6 +62,12 @@ export function LoginPage() {
     } catch (err) {
       const detail =
         err.response?.data?.detail ||
+        (err.response?.status === 429
+          ? 'Too many sign-in attempts. Wait a minute and try again.'
+          : null) ||
+        (err.message === 'Network Error'
+          ? 'Cannot reach the API. Is the backend running, and is CORS allowing this origin?'
+          : null) ||
         'Invalid email or password. Please try again.'
       setFormError(typeof detail === 'string' ? detail : 'Sign in failed.')
     }
@@ -80,6 +86,12 @@ export function LoginPage() {
     } catch (err) {
       const detail =
         err.response?.data?.detail ||
+        (err.response?.status === 429
+          ? 'Too many sign-in attempts. Wait a minute and try again.'
+          : null) ||
+        (err.message === 'Network Error'
+          ? 'Cannot reach the API. Is the backend running, and is CORS allowing this origin?'
+          : null) ||
         'Demo sign-in failed. Seed demo users with: python manage.py seed_demo_users'
       setFormError(typeof detail === 'string' ? detail : 'Demo sign-in failed.')
     } finally {

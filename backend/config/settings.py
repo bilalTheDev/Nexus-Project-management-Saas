@@ -144,7 +144,11 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 CORS_ALLOWED_ORIGINS = [
     origin.strip()
-    for origin in os.getenv("CORS_ALLOWED_ORIGINS", "http://localhost:5173").split(",")
+    for origin in os.getenv(
+        "CORS_ALLOWED_ORIGINS",
+        # Both localhost and 127.0.0.1 — browsers treat them as different origins.
+        "http://localhost:5173,http://127.0.0.1:5173",
+    ).split(",")
     if origin.strip()
 ]
 # Optional regex list for ephemeral hosts (e.g. Vercel preview URLs).
@@ -157,7 +161,10 @@ CORS_ALLOWED_ORIGIN_REGEXES = [
 CORS_ALLOW_CREDENTIALS = True
 CSRF_TRUSTED_ORIGINS = [
     origin.strip()
-    for origin in os.getenv("CSRF_TRUSTED_ORIGINS", "http://localhost:5173").split(",")
+    for origin in os.getenv(
+        "CSRF_TRUSTED_ORIGINS",
+        "http://localhost:5173,http://127.0.0.1:5173",
+    ).split(",")
     if origin.strip()
 ]
 
@@ -184,8 +191,9 @@ REST_FRAMEWORK = {
     "DEFAULT_THROTTLE_RATES": {
         "anon": "30/minute",
         "user": "300/minute",
-        # login, register, password-reset, refresh, logout
-        "auth": "5/minute",
+        # login, register, password-reset, refresh, logout.
+        # Keep production tight; allow denser local demo/sign-in retries.
+        "auth": "5/minute" if not DEBUG else "60/minute",
     },
 }
 

@@ -53,6 +53,12 @@ export function SignupPage() {
         data?.email?.[0] ||
         data?.password?.[0] ||
         data?.detail ||
+        (err.response?.status === 429
+          ? 'Too many attempts. Wait a minute and try again.'
+          : null) ||
+        (err.message === 'Network Error'
+          ? 'Cannot reach the API. Is the backend running, and is CORS allowing this origin?'
+          : null) ||
         'Could not create your account. Please try again.'
       setFormError(typeof detail === 'string' ? detail : 'Sign up failed.')
     }
