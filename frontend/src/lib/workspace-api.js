@@ -33,6 +33,12 @@ export function fetchProject(slug, projectKey) {
     .then((r) => r.data)
 }
 
+export function updateProject(slug, projectKey, payload) {
+  return api
+    .patch(`/workspaces/${slug}/projects/${projectKey}/`, payload)
+    .then((r) => r.data)
+}
+
 export function fetchProjectTemplates() {
   return api.get('/project-templates/').then((r) => r.data)
 }
@@ -290,6 +296,12 @@ export function createComponent(slug, projectKey, payload) {
 
 export function fetchNotifications(slug) {
   return api.get(`/workspaces/${slug}/notifications/`).then((r) => r.data)
+}
+
+export function markNotificationRead(slug, notificationId) {
+  return api
+    .post(`/workspaces/${slug}/notifications/${notificationId}/read/`)
+    .then((r) => r.data)
 }
 
 export function unwrapList(data) {

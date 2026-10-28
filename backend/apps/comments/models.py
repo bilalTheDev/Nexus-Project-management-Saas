@@ -6,9 +6,12 @@ from django.conf import settings
 from django.db import models
 
 from apps.tasks.models import Task
+from apps.workspaces.scoping import CommentScopedQuerySet
 
 
 class Comment(models.Model):
+    objects = CommentScopedQuerySet.as_manager()
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     task = models.ForeignKey(
         Task,

@@ -6,6 +6,7 @@ from rest_framework import serializers
 from apps.accounts.serializers import UserSerializer
 from apps.workspaces.models import Workspace, WorkspaceMembership
 from apps.workspaces.permissions import ADMIN_ROLES
+from config.serializers import StrictFieldsMixin
 
 User = get_user_model()
 
@@ -66,7 +67,7 @@ class WorkspaceSerializer(serializers.ModelSerializer):
         return obj.memberships.filter(status=WorkspaceMembership.Status.ACTIVE).count()
 
 
-class WorkspaceCreateSerializer(serializers.Serializer):
+class WorkspaceCreateSerializer(StrictFieldsMixin, serializers.Serializer):
     name = serializers.CharField(max_length=120)
     slug = serializers.SlugField(max_length=80, required=False, allow_blank=True)
     team_type = serializers.ChoiceField(
@@ -112,7 +113,7 @@ class WorkspaceCreateSerializer(serializers.Serializer):
         return workspace
 
 
-class MembershipSerializer(serializers.ModelSerializer):
+class MembershipSerializer(StrictFieldsMixin, serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
     email = serializers.EmailField(write_only=True, required=False)
     project_access_count = serializers.SerializerMethodField()
@@ -178,7 +179,7 @@ class MembershipSerializer(serializers.ModelSerializer):
         )
 
 
-class MembershipRoleUpdateSerializer(serializers.ModelSerializer):
+class MembershipRoleUpdateSerializer(StrictFieldsMixin, serializers.ModelSerializer):
     class Meta:
         model = WorkspaceMembership
         fields = ("role",)
@@ -191,7 +192,7 @@ class MembershipRoleUpdateSerializer(serializers.ModelSerializer):
         return value
 
 
-class OwnershipTransferSerializer(serializers.Serializer):
+class OwnershipTransferSerializer(StrictFieldsMixin, serializers.Serializer):
     email = serializers.EmailField()
 
     def validate_email(self, value):

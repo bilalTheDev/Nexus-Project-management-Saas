@@ -9,6 +9,7 @@ from django.db import models
 from apps.projects.models import Project
 from apps.projects.sprint_models import Sprint
 from apps.projects.workflow_models import IssueType, WorkflowStatus
+from apps.workspaces.scoping import TaskScopedQuerySet
 
 # Late imports for optional Phase 3 FKs avoided in initial field defs — see migration 0005.
 
@@ -30,6 +31,8 @@ class Task(models.Model):
         MEDIUM = "medium", "Medium"
         HIGH = "high", "High"
         URGENT = "urgent", "Urgent"
+
+    objects = TaskScopedQuerySet.as_manager()
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     project = models.ForeignKey(

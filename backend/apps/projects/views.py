@@ -22,10 +22,13 @@ from apps.projects.sprint_models import Sprint
 from apps.projects.templates import list_templates
 from apps.projects.workflow_models import Transition, WorkflowStatus
 from apps.tasks.models import Task
+from apps.projects.governance_models import ProjectMembership
 from apps.workspaces.mixins import WorkspaceScopedMixin
+from apps.workspaces.models import WorkspaceMembership
 from apps.workspaces.permissions import (
-    MANAGER_ROLES,
     CanMutateWorkspaceContent,
+    HasProjectRole,
+    HasWorkspaceRole,
     IsWorkspaceMember,
 )
 
@@ -42,9 +45,11 @@ class ProjectKeyCheckView(WorkspaceScopedMixin, APIView):
         key = (request.query_params.get("key") or "").strip().upper()
         if not (2 <= len(key) <= 16):
             return Response({"key": key, "available": False, "reason": "invalid"})
-        taken = Project.objects.filter(
-            workspace=self.workspace, key__iexact=key
-        ).exists()
+        taken = (
+            Project.objects.for_user(request.user)
+            .filter(workspace=self.workspace, key__iexact=key)
+            .exists()
+        )
         return Response({"key": key, "available": not taken})
 
 
@@ -58,7 +63,8 @@ class ProjectListCreateView(WorkspaceScopedMixin, generics.ListCreateAPIView):
 
     def get_queryset(self):
         qs = (
-            Project.objects.filter(workspace=self.workspace)
+            Project.objects.for_user(self.request.user)
+            .filter(workspace=self.workspace)
             .select_related("lead", "created_by", "default_assignee")
             .prefetch_related("tasks")
         )
@@ -110,7 +116,8 @@ class ProjectDetailView(WorkspaceScopedMixin, generics.RetrieveUpdateAPIView):
 
     def get_queryset(self):
         return (
-            Project.objects.filter(workspace=self.workspace)
+            Project.objects.for_user(self.request.user)
+            .filter(workspace=self.workspace)
             .select_related("lead", "created_by", "default_assignee")
             .prefetch_related("tasks")
         )
@@ -122,13 +129,15 @@ class ProjectDetailView(WorkspaceScopedMixin, generics.RetrieveUpdateAPIView):
 
 
 class ProjectArchiveView(WorkspaceScopedMixin, APIView):
-    permission_classes = [IsWorkspaceMember]
+    permission_classes = [
+        IsWorkspaceMember,
+        HasWorkspaceRole(WorkspaceMembership.Role.PROJECT_MANAGER),
+    ]
+    policy_action = "project.admin"
 
     def post(self, request, *args, **kwargs):
-        if self.membership.role not in MANAGER_ROLES:
-            raise PermissionDenied("Insufficient role to archive projects.")
         project = get_object_or_404(
-            Project,
+            Project.objects.for_user(request.user),
             workspace=self.workspace,
             key__iexact=kwargs["project_key"],
         )
@@ -142,7 +151,7 @@ class ProjectWorkflowView(WorkspaceScopedMixin, APIView):
 
     def get_project(self):
         return get_object_or_404(
-            Project,
+            Project.objects.for_user(self.request.user),
             workspace=self.workspace,
             key__iexact=self.kwargs["project_key"],
             archived_at__isnull=True,
@@ -169,16 +178,22 @@ class ProjectWorkflowView(WorkspaceScopedMixin, APIView):
 
 
 class ProjectTransitionCreateView(WorkspaceScopedMixin, APIView):
-    permission_classes = [IsWorkspaceMember, CanMutateWorkspaceContent]
+    permission_classes = [
+        IsWorkspaceMember,
+        HasProjectRole(ProjectMembership.Role.ADMIN),
+    ]
+    policy_action = "workflow.manage"
+
+    def get_project(self):
+        return get_object_or_404(
+            Project.objects.for_user(self.request.user),
+            workspace=self.workspace,
+            key__iexact=self.kwargs["project_key"],
+        )
 
     def post(self, request, *args, **kwargs):
-        project = get_object_or_404(
-            Project,
-            workspace=self.workspace,
-            key__iexact=kwargs["project_key"],
-        )
-        if self.membership.role not in MANAGER_ROLES:
-            raise PermissionDenied("Only managers can edit workflow.")
+        project = self.get_project()
+        self.project = project
         serializer = TransitionSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
@@ -201,16 +216,22 @@ class ProjectTransitionCreateView(WorkspaceScopedMixin, APIView):
 
 
 class ProjectStatusCreateView(WorkspaceScopedMixin, APIView):
-    permission_classes = [IsWorkspaceMember, CanMutateWorkspaceContent]
+    permission_classes = [
+        IsWorkspaceMember,
+        HasProjectRole(ProjectMembership.Role.ADMIN),
+    ]
+    policy_action = "workflow.manage"
+
+    def get_project(self):
+        return get_object_or_404(
+            Project.objects.for_user(self.request.user),
+            workspace=self.workspace,
+            key__iexact=self.kwargs["project_key"],
+        )
 
     def post(self, request, *args, **kwargs):
-        project = get_object_or_404(
-            Project,
-            workspace=self.workspace,
-            key__iexact=kwargs["project_key"],
-        )
-        if self.membership.role not in MANAGER_ROLES:
-            raise PermissionDenied("Only managers can edit workflow.")
+        project = self.get_project()
+        self.project = project
         serializer = WorkflowStatusSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         status_obj = WorkflowStatus.objects.create(
@@ -224,24 +245,39 @@ class ProjectStatusCreateView(WorkspaceScopedMixin, APIView):
 class SprintListCreateView(WorkspaceScopedMixin, generics.ListCreateAPIView):
     permission_classes = [IsWorkspaceMember, CanMutateWorkspaceContent]
     serializer_class = SprintSerializer
+    policy_action = "sprint.manage"
+
+    def get_permissions(self):
+        if self.request.method == "POST":
+            return [
+                IsWorkspaceMember(),
+                HasProjectRole(ProjectMembership.Role.ADMIN)(),
+            ]
+        return super().get_permissions()
 
     def get_project(self):
         return get_object_or_404(
-            Project,
+            Project.objects.for_user(self.request.user),
             workspace=self.workspace,
             key__iexact=self.kwargs["project_key"],
             archived_at__isnull=True,
         )
 
     def get_queryset(self):
-        return Sprint.objects.filter(project=self.get_project())
+        return Sprint.objects.for_user(self.request.user).filter(
+            project=self.get_project()
+        )
 
     def perform_create(self, serializer):
         serializer.save(project=self.get_project(), created_by=self.request.user)
 
 
 class SprintStartView(WorkspaceScopedMixin, APIView):
-    permission_classes = [IsWorkspaceMember, CanMutateWorkspaceContent]
+    permission_classes = [
+        IsWorkspaceMember,
+        HasProjectRole(ProjectMembership.Role.ADMIN),
+    ]
+    policy_action = "sprint.manage"
 
     @transaction.atomic
     def post(self, request, *args, **kwargs):

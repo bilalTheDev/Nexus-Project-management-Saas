@@ -5,6 +5,7 @@ from apps.accounts.serializers import UserSerializer
 from apps.projects.workflow_models import IssueType, WorkflowStatus
 from apps.tasks.models import IssueChange, IssueLink, Task
 from apps.tasks.services import epic_progress, record_changes, snapshot_issue
+from config.serializers import StrictFieldsMixin
 
 
 class WorkflowStatusBriefSerializer(serializers.ModelSerializer):
@@ -82,7 +83,7 @@ class TaskDetailSerializer(TaskListSerializer):
         fields = TaskListSerializer.Meta.fields + ("created_by",)
 
 
-class TaskCreateSerializer(serializers.ModelSerializer):
+class TaskCreateSerializer(StrictFieldsMixin, serializers.ModelSerializer):
     # User PK is BigAutoField; issue/sprint/status PKs are UUIDs.
     assignee_id = serializers.IntegerField(required=False, allow_null=True)
     reporter_id = serializers.IntegerField(required=False, allow_null=True)
@@ -216,7 +217,7 @@ class TaskCreateSerializer(serializers.ModelSerializer):
         return issue
 
 
-class TaskUpdateSerializer(serializers.ModelSerializer):
+class TaskUpdateSerializer(StrictFieldsMixin, serializers.ModelSerializer):
     assignee_id = serializers.IntegerField(required=False, allow_null=True)
     reporter_id = serializers.IntegerField(required=False, allow_null=True)
     issue_type_id = serializers.UUIDField(required=False, allow_null=True)
@@ -300,7 +301,7 @@ class TaskUpdateSerializer(serializers.ModelSerializer):
         return instance
 
 
-class TaskPositionSerializer(serializers.Serializer):
+class TaskPositionSerializer(StrictFieldsMixin, serializers.Serializer):
     status = serializers.CharField(required=False)
     workflow_status_id = serializers.UUIDField(required=False)
     transition_id = serializers.UUIDField(required=False)

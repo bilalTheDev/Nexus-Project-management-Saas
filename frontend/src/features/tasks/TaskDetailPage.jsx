@@ -15,6 +15,7 @@ import {
   updateTask,
   unwrapList,
 } from '@/lib/workspace-api'
+import { SafeMarkdown } from '@/components/SafeMarkdown'
 
 export function TaskDetailPage() {
   const { workspaceSlug, taskId, issueId } = useParams()
@@ -269,9 +270,10 @@ export function TaskDetailPage() {
                         <p className="text-sm font-medium text-ink">
                           {item.author?.full_name || item.author?.email}
                         </p>
-                        <p className="mt-1 text-sm text-ink-secondary">
-                          {item.body}
-                        </p>
+                        <SafeMarkdown
+                          className="mt-1 text-sm text-ink-secondary"
+                          source={item.body}
+                        />
                       </li>
                     ))}
                   </ul>

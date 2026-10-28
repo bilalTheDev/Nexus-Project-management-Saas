@@ -6,6 +6,7 @@ from django.conf import settings
 from django.db import models
 
 from apps.workspaces.models import Workspace
+from apps.workspaces.scoping import ProjectScopedQuerySet
 
 
 class Project(models.Model):
@@ -16,6 +17,8 @@ class Project(models.Model):
         MAINTENANCE = "maintenance", "Maintenance"
         PLANNING = "planning", "Planning"
         COMPLETED = "completed", "Completed"
+
+    objects = ProjectScopedQuerySet.as_manager()
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     workspace = models.ForeignKey(

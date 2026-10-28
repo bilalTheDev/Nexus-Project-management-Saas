@@ -8,6 +8,7 @@ from django.db import models
 from apps.projects.models import Project
 from apps.tasks.models import Task
 from apps.workspaces.models import Workspace
+from apps.workspaces.scoping import ActivityScopedQuerySet
 
 
 class ActivityEvent(models.Model):
@@ -24,6 +25,8 @@ class ActivityEvent(models.Model):
         MEMBER_ROLE_CHANGED = "member_role_changed", "Member Role Changed"
         WORKSPACE_CREATED = "workspace_created", "Workspace Created"
         SYSTEM = "system", "System Automation"
+
+    objects = ActivityScopedQuerySet.as_manager()
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     workspace = models.ForeignKey(

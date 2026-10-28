@@ -46,7 +46,8 @@ class TenantIsolationTests(APITestCase):
         self._auth(self.outsider)
         url = reverse("project-list", kwargs={"slug": "alpha"})
         response = self.client.get(url)
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        # Cross-tenant access must not distinguish "forbidden" from "missing".
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_owner_can_create_and_move_task(self):
         self._auth(self.owner)

@@ -6,6 +6,7 @@ from django.conf import settings
 from django.db import models
 
 from apps.projects.models import Project
+from apps.workspaces.scoping import ProjectChildScopedQuerySet
 
 
 class Sprint(models.Model):
@@ -13,6 +14,8 @@ class Sprint(models.Model):
         FUTURE = "future", "Future"
         ACTIVE = "active", "Active"
         COMPLETED = "completed", "Completed"
+
+    objects = ProjectChildScopedQuerySet.as_manager()
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     project = models.ForeignKey(

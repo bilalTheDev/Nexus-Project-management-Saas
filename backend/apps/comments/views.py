@@ -1,3 +1,4 @@
+from django.http import Http404
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import generics, status
@@ -22,15 +23,18 @@ class TaskCommentListCreateView(generics.ListCreateAPIView):
 
     def initial(self, request, *args, **kwargs):
         task = get_object_or_404(
-            Task.objects.select_related("project", "project__workspace"),
+            Task.objects.for_user(request.user).select_related(
+                "project", "project__workspace"
+            ),
             pk=kwargs.get("task_id") or self.kwargs.get("task_id"),
             archived_at__isnull=True,
         )
         self.task = task
+        self.project = task.project
         self.workspace = task.project.workspace
         self.membership = get_membership(request.user, self.workspace)
         if self.membership is None:
-            raise PermissionDenied("You are not a member of this workspace.")
+            raise Http404("Not found.")
         super().initial(request, *args, **kwargs)
 
     def get_serializer_class(self):
@@ -40,7 +44,8 @@ class TaskCommentListCreateView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         return (
-            Comment.objects.filter(task=self.task, deleted_at__isnull=True)
+            Comment.objects.for_user(self.request.user)
+            .filter(task=self.task, deleted_at__isnull=True)
             .select_related("author")
             .order_by("created_at")
         )
@@ -48,6 +53,7 @@ class TaskCommentListCreateView(generics.ListCreateAPIView):
     def get_serializer_context(self):
         ctx = super().get_serializer_context()
         ctx["task"] = self.task
+        ctx["workspace"] = self.workspace
         return ctx
 
     def create(self, request, *args, **kwargs):
@@ -71,7 +77,7 @@ class CommentDetailView(generics.DestroyAPIView):
 
     def initial(self, request, *args, **kwargs):
         comment = get_object_or_404(
-            Comment.objects.select_related(
+            Comment.objects.for_user(request.user).select_related(
                 "author", "task", "task__project", "task__project__workspace"
             ),
             pk=kwargs.get("comment_id") or self.kwargs.get("comment_id"),
@@ -81,7 +87,7 @@ class CommentDetailView(generics.DestroyAPIView):
         self.workspace = comment.task.project.workspace
         self.membership = get_membership(request.user, self.workspace)
         if self.membership is None:
-            raise PermissionDenied("You are not a member of this workspace.")
+            raise Http404("Not found.")
         super().initial(request, *args, **kwargs)
 
     def get_object(self):

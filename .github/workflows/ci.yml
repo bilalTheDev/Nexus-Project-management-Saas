@@ -5,9 +5,24 @@ on:
     branches: [main]
   pull_request:
 
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
+  gitleaks:
+    name: Secret scan (gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   frontend:
-    name: Frontend lint & build
+    name: Frontend lint, build, audit
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -22,16 +37,20 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm run build
+      - name: Fail on secret-like strings in dist
+        run: npm run check:dist-secrets
+      - name: npm audit (high+, production deps)
+        run: npm audit --omit=dev --audit-level=high
 
   backend:
-    name: Backend checks
+    name: Backend lint, security, tests
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: backend
     env:
       # Ephemeral SQLite only — never depend on Neon credentials in CI.
-      DJANGO_SECRET_KEY: ci-only-django-secret-key-not-for-production-use
+      DJANGO_SECRET_KEY: ci-deploy-check-secret-key-32chars-min-ok
       DJANGO_DEBUG: "True"
       DATABASE_URL: ""
       DATABASE_URL_UNPOOLED: ""
@@ -41,13 +60,35 @@ jobs:
         with:
           python-version: "3.11"
           cache: pip
-          cache-dependency-path: backend/requirements.txt
-      - run: pip install -r requirements.txt
+          cache-dependency-path: |
+            backend/requirements.txt
+            backend/requirements-dev.txt
+      - run: pip install -r requirements-dev.txt
+      - name: Ruff check
+        run: ruff check .
+      - name: Ruff format --check
+        run: ruff format --check .
+      - name: Bandit
+        run: bandit -r apps config -x '**/migrations/**,**/tests.py,**/tests_*.py' -q
+      - name: pip-audit
+        run: pip-audit -r requirements.txt
       - name: Django system check
         run: python manage.py check
+      - name: Django deploy check (prod-like env)
+        env:
+          DJANGO_DEBUG: "False"
+          DJANGO_SECRET_KEY: ci-deploy-check-secret-key-32chars-min-ok
+          DJANGO_ALLOWED_HOSTS: ci.example.com
+          SECURE_SSL_REDIRECT: "False"
+          CORS_ALLOWED_ORIGINS: https://app.example.com
+          CSRF_TRUSTED_ORIGINS: https://app.example.com
+        run: python manage.py check --deploy
       - name: Ensure model changes have migrations
         run: python manage.py makemigrations --check --dry-run
       - name: Apply migrations (SQLite in CI)
         run: python manage.py migrate --noinput
       - name: Run backend tests
         run: python manage.py test --verbosity=1
+      - name: OpenAPI schema drift (informational)
+        continue-on-error: true
+        run: python scripts/check_schema_drift.py

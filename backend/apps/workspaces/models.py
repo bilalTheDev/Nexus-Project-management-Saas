@@ -5,6 +5,8 @@ import uuid
 from django.conf import settings
 from django.db import models
 
+from apps.workspaces.scoping import MembershipScopedQuerySet, WorkspaceQuerySet
+
 
 class Workspace(models.Model):
     class TeamType(models.TextChoices):
@@ -12,6 +14,8 @@ class Workspace(models.Model):
         BUSINESS = "business", "Business"
         MARKETING = "marketing", "Marketing"
         OTHER = "other", "Other"
+
+    objects = WorkspaceQuerySet.as_manager()
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=120)
@@ -50,6 +54,8 @@ class WorkspaceMembership(models.Model):
         ACTIVE = "active", "Active"
         PENDING = "pending", "Pending Invite"
         REMOVED = "removed", "Removed"
+
+    objects = MembershipScopedQuerySet.as_manager()
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     workspace = models.ForeignKey(

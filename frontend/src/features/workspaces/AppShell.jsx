@@ -27,6 +27,7 @@ import {
   CommandPalette,
   RestartTourButton,
 } from '@/features/search/CommandPalette'
+import { NotificationsBell } from '@/features/notifications/NotificationsBell'
 
 const SIDEBAR_WIDTH = 246
 const MOBILE_BP = 768
@@ -317,6 +318,7 @@ export function AppShell() {
               Workspace / {workspaceQuery.data?.name || workspaceSlug}
             </p>
           </div>
+          <NotificationsBell />
           <ThemeToggle />
         </header>
         <main className="relative flex-1 overflow-y-auto bg-paper">

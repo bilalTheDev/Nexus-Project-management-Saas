@@ -7,6 +7,7 @@ from django.db import models
 
 from apps.projects.models import Project
 from apps.workspaces.models import Workspace
+from apps.workspaces.scoping import NotificationScopedQuerySet, ProjectChildScopedQuerySet
 
 
 class Release(models.Model):
@@ -14,6 +15,8 @@ class Release(models.Model):
         UNRELEASED = "unreleased", "Unreleased"
         RELEASED = "released", "Released"
         ARCHIVED = "archived", "Archived"
+
+    objects = ProjectChildScopedQuerySet.as_manager()
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="releases")
@@ -41,6 +44,8 @@ class Release(models.Model):
 
 
 class Component(models.Model):
+    objects = ProjectChildScopedQuerySet.as_manager()
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     project = models.ForeignKey(
         Project, on_delete=models.CASCADE, related_name="components"
@@ -104,6 +109,8 @@ class Notification(models.Model):
         MENTIONED = "mentioned", "Mentioned"
         STATUS_CHANGED = "status_changed", "Status changed"
         COMMENT = "comment", "Comment on watched"
+
+    objects = NotificationScopedQuerySet.as_manager()
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     workspace = models.ForeignKey(

@@ -1,10 +1,11 @@
 from datetime import timedelta
 
 from django.db.models import Count, Q
+from django.http import Http404
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import generics, status
-from rest_framework.exceptions import PermissionDenied, ValidationError
+from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -247,19 +248,26 @@ class BacklogView(WorkspaceScopedMixin, APIView):
 
 
 class TaskScopedMixin:
-    """Resolve workspace from task_id before permission checks."""
+    """
+    Resolve task via membership-scoped queryset.
+
+    Foreign-tenant and missing UUIDs both yield 404 (no existence leak).
+    """
 
     def initial(self, request, *args, **kwargs):
         task = get_object_or_404(
-            Task.objects.select_related("project", "project__workspace"),
+            Task.objects.for_user(request.user).select_related(
+                "project", "project__workspace"
+            ),
             pk=kwargs.get("task_id") or self.kwargs.get("task_id"),
             archived_at__isnull=True,
         )
         self.task = task
+        self.project = task.project
         self.workspace = task.project.workspace
         self.membership = get_membership(request.user, self.workspace)
         if self.membership is None:
-            raise PermissionDenied("You are not a member of this workspace.")
+            raise Http404("Not found.")
         super().initial(request, *args, **kwargs)
 
 
@@ -273,7 +281,7 @@ class TaskDetailView(TaskScopedMixin, generics.RetrieveUpdateAPIView):
 
     def get_object(self):
         return get_object_or_404(
-            Task.objects.select_related(
+            Task.objects.for_user(self.request.user).select_related(
                 "assignee",
                 "reporter",
                 "project",
@@ -450,7 +458,12 @@ class IssueLinkListCreateView(TaskScopedMixin, APIView):
     def post(self, request, *args, **kwargs):
         target_id = request.data.get("target_id")
         link_type = request.data.get("link_type")
-        target = get_object_or_404(Task, pk=target_id, archived_at__isnull=True)
+        target = get_object_or_404(
+            Task.objects.for_user(request.user),
+            pk=target_id,
+            archived_at__isnull=True,
+            project__workspace=self.workspace,
+        )
         forward, _inverse = create_issue_link(
             source=self.task,
             target=target,

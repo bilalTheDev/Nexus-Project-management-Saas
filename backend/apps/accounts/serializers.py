@@ -3,6 +3,8 @@ from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
+from config.serializers import StrictFieldsMixin
+
 User = get_user_model()
 
 
@@ -23,7 +25,7 @@ class UserSerializer(serializers.ModelSerializer):
         read_only_fields = fields
 
 
-class RegisterSerializer(serializers.Serializer):
+class RegisterSerializer(StrictFieldsMixin, serializers.Serializer):
     email = serializers.EmailField()
     password = serializers.CharField(write_only=True, min_length=10)
     first_name = serializers.CharField(max_length=150, required=False, allow_blank=True)
@@ -83,11 +85,11 @@ class EmailTokenObtainPairSerializer(TokenObtainPairSerializer):
         return data
 
 
-class PasswordResetRequestSerializer(serializers.Serializer):
+class PasswordResetRequestSerializer(StrictFieldsMixin, serializers.Serializer):
     email = serializers.EmailField()
 
 
-class PasswordResetConfirmSerializer(serializers.Serializer):
+class PasswordResetConfirmSerializer(StrictFieldsMixin, serializers.Serializer):
     uid = serializers.CharField()
     token = serializers.CharField()
     password = serializers.CharField(min_length=10)

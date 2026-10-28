@@ -4,7 +4,7 @@ from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import generics, status
-from rest_framework.exceptions import PermissionDenied, ValidationError
+from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -15,8 +15,7 @@ from apps.tasks.models import Task
 from apps.workspaces.models import Workspace, WorkspaceMembership
 from apps.workspaces.mixins import WorkspaceScopedMixin
 from apps.workspaces.permissions import (
-    ADMIN_ROLES,
-    IsWorkspaceAdmin,
+    HasWorkspaceRole,
     IsWorkspaceMember,
 )
 from apps.workspaces.serializers import (
@@ -26,6 +25,7 @@ from apps.workspaces.serializers import (
     WorkspaceCreateSerializer,
     WorkspaceSerializer,
 )
+from apps.workspaces.services import soft_remove_membership, transfer_ownership
 
 
 class WorkspaceListCreateView(generics.ListCreateAPIView):
@@ -36,11 +36,8 @@ class WorkspaceListCreateView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         return (
-            Workspace.objects.filter(
-                memberships__user=self.request.user,
-                memberships__status=WorkspaceMembership.Status.ACTIVE,
-                archived_at__isnull=True,
-            )
+            Workspace.objects.for_user(self.request.user)
+            .filter(archived_at__isnull=True)
             .annotate(
                 active_member_count=Count(
                     "memberships",
@@ -73,12 +70,18 @@ class WorkspaceDetailView(WorkspaceScopedMixin, generics.RetrieveUpdateAPIView):
     permission_classes = [IsWorkspaceMember]
     lookup_field = "slug"
 
+    def get_permissions(self):
+        if self.request.method in ("PUT", "PATCH"):
+            return [
+                IsWorkspaceMember(),
+                HasWorkspaceRole(WorkspaceMembership.Role.ADMIN)(),
+            ]
+        return super().get_permissions()
+
     def get_object(self):
         return self.workspace
 
     def perform_update(self, serializer):
-        if self.membership.role not in ADMIN_ROLES:
-            raise PermissionDenied("Only admins can update workspace settings.")
         serializer.save()
 
 
@@ -87,12 +90,16 @@ class WorkspaceDashboardView(WorkspaceScopedMixin, APIView):
 
     def get(self, request, *args, **kwargs):
         workspace = self.workspace
-        projects = Project.objects.filter(
-            workspace=workspace, archived_at__isnull=True
-        ).select_related("lead")
-        tasks = Task.objects.filter(
-            project__workspace=workspace, archived_at__isnull=True
-        ).select_related("assignee", "project")
+        projects = (
+            Project.objects.for_user(request.user)
+            .filter(workspace=workspace, archived_at__isnull=True)
+            .select_related("lead")
+        )
+        tasks = (
+            Task.objects.for_user(request.user)
+            .filter(project__workspace=workspace, archived_at__isnull=True)
+            .select_related("assignee", "project")
+        )
 
         my_open = tasks.filter(assignee=request.user).exclude(status=Task.Status.DONE)
         overdue = my_open.filter(due_date__lt=timezone.now())
@@ -181,6 +188,15 @@ class WorkspaceDashboardView(WorkspaceScopedMixin, APIView):
 class MembershipListCreateView(WorkspaceScopedMixin, generics.ListCreateAPIView):
     permission_classes = [IsWorkspaceMember]
     serializer_class = MembershipSerializer
+    policy_action = "member.manage"
+
+    def get_permissions(self):
+        if self.request.method == "POST":
+            return [
+                IsWorkspaceMember(),
+                HasWorkspaceRole(WorkspaceMembership.Role.ADMIN)(),
+            ]
+        return super().get_permissions()
 
     def get_queryset(self):
         qs = (
@@ -217,8 +233,6 @@ class MembershipListCreateView(WorkspaceScopedMixin, generics.ListCreateAPIView)
         return ctx
 
     def perform_create(self, serializer):
-        if self.membership.role not in ADMIN_ROLES:
-            raise PermissionDenied("Only owners and admins can invite members.")
         membership = serializer.save()
         log_activity(
             workspace=self.workspace,
@@ -240,6 +254,15 @@ class MembershipDetailView(WorkspaceScopedMixin, generics.RetrieveUpdateDestroyA
     permission_classes = [IsWorkspaceMember]
     serializer_class = MembershipSerializer
     lookup_url_kwarg = "membership_id"
+    policy_action = "member.manage"
+
+    def get_permissions(self):
+        if self.request.method in ("PUT", "PATCH", "DELETE"):
+            return [
+                IsWorkspaceMember(),
+                HasWorkspaceRole(WorkspaceMembership.Role.ADMIN)(),
+            ]
+        return super().get_permissions()
 
     def get_queryset(self):
         return WorkspaceMembership.objects.filter(
@@ -252,8 +275,6 @@ class MembershipDetailView(WorkspaceScopedMixin, generics.RetrieveUpdateDestroyA
         )
 
     def patch(self, request, *args, **kwargs):
-        if self.membership.role not in ADMIN_ROLES:
-            raise PermissionDenied("Only owners and admins can change roles.")
         membership = self.get_object()
         if membership.role == WorkspaceMembership.Role.OWNER:
             raise ValidationError({"role": "Cannot change the owner role here."})
@@ -269,24 +290,17 @@ class MembershipDetailView(WorkspaceScopedMixin, generics.RetrieveUpdateDestroyA
             summary=f"Changed role for {membership.user.email}",
             metadata={"role": membership.role},
         )
-        return Response(MembershipSerializer(membership, context={"request": request}).data)
+        return Response(
+            MembershipSerializer(membership, context={"request": request}).data
+        )
 
     def delete(self, request, *args, **kwargs):
-        if self.membership.role not in ADMIN_ROLES:
-            raise PermissionDenied("Only owners and admins can remove members.")
         membership = self.get_object()
-        if membership.role == WorkspaceMembership.Role.OWNER:
-            owners = WorkspaceMembership.objects.filter(
-                workspace=self.workspace,
-                role=WorkspaceMembership.Role.OWNER,
-                status=WorkspaceMembership.Status.ACTIVE,
-            ).count()
-            if owners <= 1:
-                raise ValidationError(
-                    {"detail": "Cannot remove the final workspace owner."}
-                )
-        membership.status = WorkspaceMembership.Status.REMOVED
-        membership.save(update_fields=["status"])
+        soft_remove_membership(
+            workspace=self.workspace,
+            membership=membership,
+            actor_membership=self.membership,
+        )
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
@@ -318,32 +332,21 @@ class MembershipStatsView(WorkspaceScopedMixin, APIView):
 
 
 class OwnershipTransferView(WorkspaceScopedMixin, APIView):
-    permission_classes = [IsWorkspaceMember, IsWorkspaceAdmin]
+    permission_classes = [
+        IsWorkspaceMember,
+        HasWorkspaceRole(WorkspaceMembership.Role.OWNER),
+    ]
+    policy_action = "workspace.owner"
 
     def post(self, request, *args, **kwargs):
-        if self.membership.role != WorkspaceMembership.Role.OWNER:
-            raise PermissionDenied("Only the current owner can transfer ownership.")
         serializer = OwnershipTransferSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        email = serializer.validated_data["email"]
-        target = WorkspaceMembership.objects.filter(
+        target = transfer_ownership(
             workspace=self.workspace,
-            user__email__iexact=email,
-            status=WorkspaceMembership.Status.ACTIVE,
-        ).select_related("user").first()
-        if target is None:
-            raise ValidationError({"email": "Target user is not an active member."})
-        if target.user_id == request.user.id:
-            raise ValidationError({"email": "You already own this workspace."})
-
-        self.membership.role = WorkspaceMembership.Role.ADMIN
-        self.membership.save(update_fields=["role"])
-        target.role = WorkspaceMembership.Role.OWNER
-        target.save(update_fields=["role"])
-        log_activity(
-            workspace=self.workspace,
-            event_type=ActivityEvent.EventType.MEMBER_ROLE_CHANGED,
+            current_owner_membership=self.membership,
+            target_email=serializer.validated_data["email"],
             actor=request.user,
-            summary=f"Transferred ownership to {target.user.email}",
         )
-        return Response({"detail": "Ownership transferred.", "owner": target.user.email})
+        return Response(
+            {"detail": "Ownership transferred.", "owner": target.user.email}
+        )

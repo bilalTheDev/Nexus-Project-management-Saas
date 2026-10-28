@@ -6,9 +6,10 @@ from apps.projects.sprint_models import Sprint
 from apps.projects.templates import apply_template, get_template
 from apps.projects.workflow_models import IssueType, Transition, WorkflowStatus
 from apps.tasks.models import Task
+from config.serializers import StrictFieldsMixin
 
 
-class ProjectSerializer(serializers.ModelSerializer):
+class ProjectSerializer(StrictFieldsMixin, serializers.ModelSerializer):
     lead = UserSerializer(read_only=True)
     # User PK is BigAutoField (int), not UUID.
     lead_id = serializers.IntegerField(write_only=True, required=False, allow_null=True)
@@ -121,7 +122,7 @@ class ProjectSerializer(serializers.ModelSerializer):
         return super().update(instance, validated_data)
 
 
-class ProjectCreateSerializer(serializers.ModelSerializer):
+class ProjectCreateSerializer(StrictFieldsMixin, serializers.ModelSerializer):
     lead_id = serializers.IntegerField(required=False, allow_null=True)
     default_assignee_id = serializers.IntegerField(required=False, allow_null=True)
     template_key = serializers.CharField(required=False, default="scrum")
@@ -176,7 +177,7 @@ class ProjectCreateSerializer(serializers.ModelSerializer):
         return project
 
 
-class WorkflowStatusSerializer(serializers.ModelSerializer):
+class WorkflowStatusSerializer(StrictFieldsMixin, serializers.ModelSerializer):
     class Meta:
         model = WorkflowStatus
         fields = (
@@ -189,13 +190,13 @@ class WorkflowStatusSerializer(serializers.ModelSerializer):
         )
 
 
-class IssueTypeSerializer(serializers.ModelSerializer):
+class IssueTypeSerializer(StrictFieldsMixin, serializers.ModelSerializer):
     class Meta:
         model = IssueType
         fields = ("id", "key", "name", "hierarchy_level", "position")
 
 
-class TransitionSerializer(serializers.ModelSerializer):
+class TransitionSerializer(StrictFieldsMixin, serializers.ModelSerializer):
     from_status = WorkflowStatusSerializer(read_only=True)
     to_status = WorkflowStatusSerializer(read_only=True)
     from_status_id = serializers.UUIDField(write_only=True)
@@ -214,7 +215,7 @@ class TransitionSerializer(serializers.ModelSerializer):
         )
 
 
-class SprintSerializer(serializers.ModelSerializer):
+class SprintSerializer(StrictFieldsMixin, serializers.ModelSerializer):
     class Meta:
         model = Sprint
         fields = (

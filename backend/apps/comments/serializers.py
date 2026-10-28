@@ -8,12 +8,13 @@ from apps.activity.models import ActivityEvent
 from apps.activity.services import log_activity
 from apps.comments.models import Comment
 from apps.workspaces.models import WorkspaceMembership
+from config.serializers import StrictFieldsMixin
 
 User = get_user_model()
 MENTION_RE = re.compile(r"@([A-Za-z0-9._+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}|[A-Za-z0-9._-]+)")
 
 
-class CommentSerializer(serializers.ModelSerializer):
+class CommentSerializer(StrictFieldsMixin, serializers.ModelSerializer):
     author = UserSerializer(read_only=True)
 
     class Meta:
@@ -29,7 +30,7 @@ class CommentSerializer(serializers.ModelSerializer):
         read_only_fields = ("id", "task", "author", "created_at", "updated_at")
 
 
-class CommentCreateSerializer(serializers.ModelSerializer):
+class CommentCreateSerializer(StrictFieldsMixin, serializers.ModelSerializer):
     class Meta:
         model = Comment
         fields = ("body",)

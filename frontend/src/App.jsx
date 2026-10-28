@@ -12,7 +12,7 @@ import { OverviewPage } from '@/features/dashboard/OverviewPage'
 import { ProjectsPage } from '@/features/projects/ProjectsPage'
 import { ProjectCreatePage } from '@/features/projects/ProjectCreatePage'
 import { ProjectShell } from '@/features/projects/ProjectShell'
-import { ProjectPlaceholderPage } from '@/features/projects/ProjectPlaceholderPage'
+import { ProjectSettingsPage } from '@/features/projects/ProjectSettingsPage'
 import { BacklogPage } from '@/features/projects/BacklogPage'
 import { ReportsPage } from '@/features/projects/ReportsPage'
 import { IssuesNavigatorPage } from '@/features/projects/IssuesNavigatorPage'
@@ -57,15 +57,7 @@ export default function App() {
           <Route path="issues" element={<IssuesNavigatorPage />} />
           <Route path="releases" element={<ReleasesPage />} />
           <Route path="components" element={<ComponentsPage />} />
-          <Route
-            path="settings"
-            element={
-              <ProjectPlaceholderPage
-                title="Project settings"
-                body="Workflow visual editor and project defaults live here next."
-              />
-            }
-          />
+          <Route path="settings" element={<ProjectSettingsPage />} />
         </Route>
         <Route path="activity" element={<ActivityPage />} />
         <Route path="members" element={<MembersPage />} />
