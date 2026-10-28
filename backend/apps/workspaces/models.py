@@ -96,3 +96,54 @@ class WorkspaceMembership(models.Model):
 
     def __str__(self) -> str:
         return f"{self.user_id} @ {self.workspace.slug} ({self.role})"
+
+
+class WorkspaceInvite(models.Model):
+    """Email invite for users who may not have an account yet."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    workspace = models.ForeignKey(
+        Workspace,
+        on_delete=models.CASCADE,
+        related_name="invites",
+    )
+    email = models.EmailField()
+    role = models.CharField(
+        max_length=32,
+        choices=WorkspaceMembership.Role.choices,
+        default=WorkspaceMembership.Role.MEMBER,
+    )
+    token = models.CharField(max_length=64, unique=True, db_index=True)
+    invited_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="sent_workspace_invites",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    accepted_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=["workspace", "email"]),
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["workspace", "email"],
+                condition=models.Q(accepted_at__isnull=True),
+                name="uniq_open_invite_per_workspace_email",
+            )
+        ]
+
+    def __str__(self) -> str:
+        return f"Invite {self.email} → {self.workspace.slug}"
+
+    @property
+    def is_open(self) -> bool:
+        from django.utils import timezone
+
+        return self.accepted_at is None and self.expires_at > timezone.now()
+

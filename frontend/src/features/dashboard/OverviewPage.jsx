@@ -7,6 +7,7 @@ export function OverviewPage() {
   const { data, isLoading, isError } = useQuery({
     queryKey: ['dashboard', workspaceSlug],
     queryFn: () => fetchDashboard(workspaceSlug),
+    refetchInterval: 30_000,
   })
 
   if (isLoading) {

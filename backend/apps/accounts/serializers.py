@@ -31,6 +31,7 @@ class RegisterSerializer(StrictFieldsMixin, serializers.Serializer):
     first_name = serializers.CharField(max_length=150, required=False, allow_blank=True)
     last_name = serializers.CharField(max_length=150, required=False, allow_blank=True)
     full_name = serializers.CharField(required=False, allow_blank=True, write_only=True)
+    invite_token = serializers.CharField(required=False, allow_blank=True, write_only=True)
 
     def validate_email(self, value):
         email = value.lower().strip()
@@ -43,6 +44,7 @@ class RegisterSerializer(StrictFieldsMixin, serializers.Serializer):
         return value
 
     def create(self, validated_data):
+        invite_token = (validated_data.pop("invite_token", "") or "").strip()
         full_name = (validated_data.pop("full_name", "") or "").strip()
         first_name = (validated_data.get("first_name") or "").strip()
         last_name = (validated_data.get("last_name") or "").strip()
@@ -58,6 +60,10 @@ class RegisterSerializer(StrictFieldsMixin, serializers.Serializer):
             first_name=first_name,
             last_name=last_name,
         )
+        if invite_token:
+            from apps.workspaces.invites import accept_invite
+
+            accept_invite(token=invite_token, user=user)
         return user
 
 

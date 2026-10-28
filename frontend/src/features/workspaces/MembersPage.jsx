@@ -25,6 +25,7 @@ export function MembersPage() {
   const [roleFilter, setRoleFilter] = useState('all')
   const [statusFilter, setStatusFilter] = useState('all')
   const [inviteOpen, setInviteOpen] = useState(false)
+  const [inviteResult, setInviteResult] = useState(null)
   const queryClient = useQueryClient()
 
   const params = useMemo(() => {
@@ -55,10 +56,11 @@ export function MembersPage() {
 
   const inviteMutation = useMutation({
     mutationFn: (payload) => inviteMember(workspaceSlug, payload),
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['members', workspaceSlug] })
       queryClient.invalidateQueries({ queryKey: ['member-stats', workspaceSlug] })
       setInviteOpen(false)
+      setInviteResult(data)
     },
   })
 
@@ -257,6 +259,13 @@ export function MembersPage() {
           onSubmit={(payload) => inviteMutation.mutate(payload)}
         />
       ) : null}
+
+      {inviteResult ? (
+        <InviteSuccessModal
+          result={inviteResult}
+          onClose={() => setInviteResult(null)}
+        />
+      ) : null}
     </div>
   )
 }
@@ -298,6 +307,9 @@ function InviteModal({ onClose, onSubmit, pending, error }) {
         }}
       >
         <h2 className="font-display text-2xl text-ink">Invite Member</h2>
+        <p className="mt-1 text-sm text-ink-secondary">
+          We&apos;ll email an invite link. New teammates can sign up from that link.
+        </p>
         <label className="mt-4 block text-sm">
           Email
           <input
@@ -335,6 +347,55 @@ function InviteModal({ onClose, onSubmit, pending, error }) {
           </Button>
         </div>
       </form>
+    </div>
+  )
+}
+
+function InviteSuccessModal({ result, onClose }) {
+  const [copied, setCopied] = useState(false)
+  const url = result?.invite_url || ''
+
+  async function copyLink() {
+    try {
+      await navigator.clipboard.writeText(url)
+      setCopied(true)
+    } catch {
+      setCopied(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 p-4">
+      <div
+        className="w-full max-w-md rounded-xl border border-border bg-surface p-6"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Invite created"
+      >
+        <h2 className="font-display text-2xl text-ink">Invite sent</h2>
+        <p className="mt-2 text-sm text-ink-secondary">
+          {result?.email_sent
+            ? `Email queued for ${result.email}.`
+            : `Invite created for ${result.email}. Email was not delivered — copy the link below (dev: check the Django console for the message).`}
+        </p>
+        <label className="mt-4 block text-sm">
+          Invite link
+          <input
+            readOnly
+            className="mt-1 w-full rounded-md border border-border bg-paper px-3 py-2 font-mono text-xs"
+            value={url}
+            onFocus={(e) => e.target.select()}
+          />
+        </label>
+        <div className="mt-5 flex justify-end gap-2">
+          <Button type="button" variant="secondary" onClick={copyLink}>
+            {copied ? 'Copied' : 'Copy link'}
+          </Button>
+          <Button type="button" onClick={onClose}>
+            Done
+          </Button>
+        </div>
+      </div>
     </div>
   )
 }

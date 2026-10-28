@@ -12,6 +12,7 @@ export function SignupPage() {
   const { register: registerUser, isAuthenticated, bootstrapping } = useAuth()
   const navigate = useNavigate()
   const [params] = useSearchParams()
+  const inviteToken = params.get('invite') || ''
   const [showPassword, setShowPassword] = useState(false)
   const [formError, setFormError] = useState('')
 
@@ -35,18 +36,28 @@ export function SignupPage() {
   const strength = useMemo(() => passwordStrength(passwordValue), [passwordValue])
 
   if (!bootstrapping && isAuthenticated) {
+    if (inviteToken) {
+      return <Navigate to={`/invite/${inviteToken}`} replace />
+    }
     return <Navigate to="/app/workspaces/new" replace />
   }
 
   async function onSubmit(values) {
     setFormError('')
     try {
-      await registerUser({
+      const session = await registerUser({
         email: values.email,
         password: values.password,
         full_name: values.full_name,
+        ...(inviteToken ? { invite_token: inviteToken } : {}),
       })
-      navigate('/app/workspaces/new', { replace: true })
+      if (inviteToken && session?.default_workspace) {
+        navigate(`/app/${session.default_workspace}/dashboard`, { replace: true })
+      } else if (inviteToken) {
+        navigate(`/invite/${inviteToken}`, { replace: true })
+      } else {
+        navigate('/app/workspaces/new', { replace: true })
+      }
     } catch (err) {
       const data = err.response?.data
       const detail =
@@ -67,11 +78,18 @@ export function SignupPage() {
   return (
     <AuthLayout
       title="Create your Nexus account"
-      subtitle="Start a workspace for your team in a few minutes."
+      subtitle={
+        inviteToken
+          ? 'Create your account to join the workspace you were invited to.'
+          : 'Start a workspace for your team in a few minutes.'
+      }
       footer={
         <>
           Already have an account?{' '}
-          <Link to="/login" className="font-semibold text-brand underline-offset-2 hover:underline">
+          <Link
+            to={inviteToken ? `/login?invite=${encodeURIComponent(inviteToken)}` : '/login'}
+            className="font-semibold text-brand underline-offset-2 hover:underline"
+          >
             Sign in
           </Link>
         </>

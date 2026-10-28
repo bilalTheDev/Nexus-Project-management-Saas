@@ -29,13 +29,19 @@ export function KanbanBoardPage() {
   const [onlyMine, setOnlyMine] = useState(false)
   const [unassigned, setUnassigned] = useState(false)
 
+  const boardKey = ['board', workspaceSlug, projectKey, onlyMine, unassigned]
+
   const boardQuery = useQuery({
-    queryKey: ['board', workspaceSlug, projectKey, onlyMine, unassigned],
+    queryKey: boardKey,
     queryFn: () =>
       fetchBoard(workspaceSlug, projectKey, {
         only_mine: onlyMine ? '1' : undefined,
         unassigned: unassigned ? '1' : undefined,
       }),
+    staleTime: 8_000,
+    // Keep other teammates' moves visible without WebSockets.
+    refetchInterval: 12_000,
+    refetchIntervalInBackground: false,
   })
 
   const statuses = boardQuery.data?.statuses || []
@@ -57,12 +63,32 @@ export function KanbanBoardPage() {
   const moveMutation = useMutation({
     mutationFn: ({ taskId, status, position, version }) =>
       updateTaskPosition(taskId, { status, position, version }),
+    onSuccess: (data) => {
+      if (!data?.id) return
+      queryClient.setQueryData(boardKey, (old) => {
+        if (!old?.columns) return old
+        const nextColumns = {}
+        for (const key of Object.keys(old.columns)) {
+          nextColumns[key] = (old.columns[key] || []).filter(
+            (t) => t.id !== data.id,
+          )
+        }
+        const target =
+          data.workflow_status?.key || data.status || findColumnIn(old, data.id)
+        if (target && nextColumns[target] != null) {
+          const list = [...nextColumns[target], data]
+          list.sort((a, b) => (a.position ?? 0) - (b.position ?? 0))
+          nextColumns[target] = list
+        }
+        return { ...old, columns: nextColumns }
+      })
+      queryClient.setQueryData(['task', data.id], (prev) =>
+        prev ? { ...prev, ...data } : data,
+      )
+    },
     onError: (err) => {
       if (snapshot) {
-        queryClient.setQueryData(
-          ['board', workspaceSlug, projectKey, onlyMine, unassigned],
-          snapshot,
-        )
+        queryClient.setQueryData(boardKey, snapshot)
       }
       const detail =
         err.response?.data?.detail?.detail ||
@@ -70,20 +96,10 @@ export function KanbanBoardPage() {
         'That move is not allowed.'
       toast.error(typeof detail === 'string' ? detail : 'Move rejected')
     },
-    onSettled: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['board', workspaceSlug, projectKey],
-      })
-    },
   })
 
   function findColumn(taskId) {
-    for (const status of statuses) {
-      if ((columns[status.key] || []).some((t) => t.id === taskId)) {
-        return status.key
-      }
-    }
-    return null
+    return findColumnIn({ statuses, columns }, taskId)
   }
 
   function onDragStart(event) {
@@ -108,7 +124,8 @@ export function KanbanBoardPage() {
     const list = [...(columns[toStatus] || [])].filter((t) => t.id !== taskId)
     const overIndex = list.findIndex((t) => t.id === over.id)
     const insertAt = overIndex >= 0 ? overIndex : list.length
-    list.splice(insertAt, 0, task)
+    const moved = { ...task, status: toStatus, position: 0 }
+    list.splice(insertAt, 0, moved)
     const prev = list[insertAt - 1]
     const next = list[insertAt + 1]
     const position =
@@ -119,8 +136,20 @@ export function KanbanBoardPage() {
           : next
             ? next.position / 2 || 1000
             : 1000
+    moved.position = position
 
     if (fromStatus === toStatus && task.position === position) return
+
+    // Optimistic board update so the card stays where it was dropped.
+    queryClient.setQueryData(boardKey, (old) => {
+      if (!old?.columns) return old
+      const nextColumns = {}
+      for (const key of Object.keys(old.columns)) {
+        nextColumns[key] = (old.columns[key] || []).filter((t) => t.id !== taskId)
+      }
+      nextColumns[toStatus] = list
+      return { ...old, columns: nextColumns }
+    })
 
     moveMutation.mutate({
       taskId,
@@ -128,6 +157,17 @@ export function KanbanBoardPage() {
       position,
       version: task.version,
     })
+  }
+
+  function findColumnIn(board, taskId) {
+    const boardStatuses = board.statuses || statuses
+    const boardColumns = board.columns || columns
+    for (const status of boardStatuses) {
+      if ((boardColumns[status.key] || []).some((t) => t.id === taskId)) {
+        return status.key
+      }
+    }
+    return null
   }
 
   if (boardQuery.isLoading) {

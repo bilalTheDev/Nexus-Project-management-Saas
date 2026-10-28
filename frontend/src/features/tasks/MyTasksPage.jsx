@@ -14,6 +14,7 @@ export function MyTasksPage() {
           params: { status: 'open' },
         })
         .then((r) => r.data),
+    refetchInterval: 15_000,
   })
   const tasks = unwrapList(data)
 

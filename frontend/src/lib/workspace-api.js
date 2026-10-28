@@ -171,6 +171,14 @@ export function inviteMember(slug, payload) {
   return api.post(`/workspaces/${slug}/members/`, payload).then((r) => r.data)
 }
 
+export function previewInvite(token) {
+  return api.get(`/invites/${token}/`).then((r) => r.data)
+}
+
+export function acceptInvite(token) {
+  return api.post(`/invites/${token}/accept/`).then((r) => r.data)
+}
+
 export function updateMemberRole(slug, membershipId, role) {
   return api
     .patch(`/workspaces/${slug}/members/${membershipId}/`, { role })

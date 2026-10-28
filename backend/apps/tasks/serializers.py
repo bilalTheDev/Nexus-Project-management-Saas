@@ -73,6 +73,8 @@ class TaskListSerializer(serializers.ModelSerializer):
         return obj.comments.filter(deleted_at__isnull=True).count()
 
     def get_epic_progress(self, obj):
+        if self.context.get("skip_epic_progress"):
+            return None
         if not obj.issue_type_id or obj.issue_type.hierarchy_level < 1:
             return None
         return epic_progress(obj)

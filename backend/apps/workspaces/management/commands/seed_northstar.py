@@ -15,7 +15,7 @@ from apps.workspaces.models import Workspace, WorkspaceMembership
 
 User = get_user_model()
 
-DEMO_PASSWORD = "DemoPass1"
+DEMO_PASSWORD = "DemoPass1"  # nosec B105 — demo seed credential, not production
 
 USERS = [
     {

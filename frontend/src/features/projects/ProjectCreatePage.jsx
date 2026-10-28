@@ -239,8 +239,8 @@ export function ProjectCreatePage() {
             />
           </label>
           <p className="text-sm text-[var(--text-secondary)]">
-            They must already have a Nexus account. You can invite more people
-            later from Members.
+            We&apos;ll email an invite link (or you can copy it from Members). New
+            teammates can sign up from that link.
           </p>
         </div>
       ) : null}

@@ -1,6 +1,8 @@
 from django.urls import path
 
 from apps.workspaces.views import (
+    InviteAcceptView,
+    InvitePreviewView,
     MembershipDetailView,
     MembershipListCreateView,
     MembershipStatsView,
@@ -41,5 +43,15 @@ urlpatterns = [
         "workspaces/<slug:slug>/transfer-ownership/",
         OwnershipTransferView.as_view(),
         name="workspace-transfer-ownership",
+    ),
+    path(
+        "invites/<str:token>/",
+        InvitePreviewView.as_view(),
+        name="invite-preview",
+    ),
+    path(
+        "invites/<str:token>/accept/",
+        InviteAcceptView.as_view(),
+        name="invite-accept",
     ),
 ]

@@ -72,7 +72,8 @@ jobs:
       - name: Ruff format --check (config)
         run: ruff format --check config
       - name: Bandit
-        run: bandit -r apps config -x '**/migrations/**,**/tests.py,**/tests_*.py' -q
+        # Use pyproject.toml skips (B101 assert in templates, B105 demo seed passwords).
+        run: bandit -r apps config -x '**/migrations/**,**/tests.py,**/tests_*.py' -q -c pyproject.toml
       - name: pip-audit
         run: pip-audit -r requirements.txt
       - name: Django system check

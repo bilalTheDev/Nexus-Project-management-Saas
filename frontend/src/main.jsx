@@ -15,7 +15,9 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: 1,
-      refetchOnWindowFocus: false,
+      // Keep lists warm; still sync when the user returns to a tab.
+      staleTime: 15_000,
+      refetchOnWindowFocus: true,
     },
   },
 })

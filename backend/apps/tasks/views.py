@@ -172,8 +172,15 @@ class BoardTasksView(WorkspaceScopedMixin, APIView):
         columns = {str(s.id): [] for s in statuses}
         # Also key by status.key for FE convenience
         columns_by_key = {s.key: [] for s in statuses}
+        # Skip per-card epic_progress (extra queries) on the board payload.
+        serialized = TaskListSerializer(
+            tasks, many=True, context={"skip_epic_progress": True}
+        ).data
+        by_id = {str(row["id"]): row for row in serialized}
         for task in tasks:
-            payload = TaskListSerializer(task).data
+            payload = by_id.get(str(task.id))
+            if payload is None:
+                continue
             if task.workflow_status_id and str(task.workflow_status_id) in columns:
                 columns[str(task.workflow_status_id)].append(payload)
                 columns_by_key[task.workflow_status.key].append(payload)

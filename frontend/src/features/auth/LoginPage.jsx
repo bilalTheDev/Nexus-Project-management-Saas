@@ -25,6 +25,7 @@ export function LoginPage() {
   const { login, isAuthenticated, bootstrapping } = useAuth()
   const navigate = useNavigate()
   const [params] = useSearchParams()
+  const inviteToken = params.get('invite') || ''
   const [showPassword, setShowPassword] = useState(false)
   const [formError, setFormError] = useState('')
   const [demoLoading, setDemoLoading] = useState('')
@@ -37,18 +38,25 @@ export function LoginPage() {
   } = useForm({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: '',
+      email: params.get('email') || '',
       password: '',
       rememberMe: false,
     },
   })
 
   if (!bootstrapping && isAuthenticated) {
+    if (inviteToken) {
+      return <Navigate to={`/invite/${inviteToken}`} replace />
+    }
     return <Navigate to="/app" replace />
   }
 
   async function completeLogin(email, password) {
     const session = await login({ email, password })
+    if (inviteToken) {
+      navigate(`/invite/${inviteToken}`, { replace: true })
+      return
+    }
     const dest = session.default_workspace
       ? `/app/${session.default_workspace}/dashboard`
       : '/app/workspaces/new'

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { X } from 'lucide-react'
@@ -10,11 +10,13 @@ import {
   fetchComments,
   fetchIssueHistory,
   fetchIssueTransitions,
+  fetchMembers,
   fetchTask,
   postComment,
   updateTask,
   unwrapList,
 } from '@/lib/workspace-api'
+import { patchTaskOnBoards, upsertTaskOnBoards } from '@/lib/query-cache'
 import { SafeMarkdown } from '@/components/SafeMarkdown'
 
 export function TaskDetailPage() {
@@ -27,19 +29,29 @@ export function TaskDetailPage() {
   const closeRef = useRef(null)
   const [comment, setComment] = useState('')
   const [tab, setTab] = useState('comments')
+  const membersRef = useRef([])
 
   const taskQuery = useQuery({
     queryKey: ['task', id],
     queryFn: () => fetchTask(id),
+    staleTime: 10_000,
+  })
+  const membersQuery = useQuery({
+    queryKey: ['members', workspaceSlug, { status: 'active' }],
+    queryFn: () => fetchMembers(workspaceSlug, { status: 'active' }),
+    enabled: Boolean(workspaceSlug),
+    staleTime: 30_000,
   })
   const commentsQuery = useQuery({
     queryKey: ['comments', id],
     queryFn: () => fetchComments(id),
+    staleTime: 10_000,
   })
   const transitionsQuery = useQuery({
     queryKey: ['transitions', id],
     queryFn: () => fetchIssueTransitions(id),
     enabled: Boolean(id),
+    staleTime: 15_000,
   })
   const historyQuery = useQuery({
     queryKey: ['history', id],
@@ -47,16 +59,70 @@ export function TaskDetailPage() {
     enabled: tab === 'history',
   })
 
+  const syncBoardFromTask = (task) => {
+    const projectKey = fromProject || task?.project_key
+    if (!projectKey || !task) return
+    upsertTaskOnBoards(queryClient, {
+      workspaceSlug,
+      projectKey,
+      task,
+    })
+  }
+
   const updateMutation = useMutation({
-    mutationFn: (payload) =>
-      updateTask(id, { ...payload, version: taskQuery.data?.version }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['task', id] })
-      queryClient.invalidateQueries({ queryKey: ['board'] })
-      queryClient.invalidateQueries({ queryKey: ['history', id] })
-      toast.success('Saved')
+    mutationFn: (payload) => {
+      const current = queryClient.getQueryData(['task', id])
+      return updateTask(id, { ...payload, version: current?.version })
     },
-    onError: (err) => {
+    onMutate: async (payload) => {
+      await queryClient.cancelQueries({ queryKey: ['task', id] })
+      const previous = queryClient.getQueryData(['task', id])
+      if (!previous) return { previous }
+
+      const next = { ...previous }
+      if ('title' in payload) next.title = payload.title
+      if ('description' in payload) next.description = payload.description
+      if ('priority' in payload) next.priority = payload.priority
+      if ('assignee_id' in payload) {
+        if (payload.assignee_id == null) {
+          next.assignee = null
+        } else {
+          next.assignee =
+            membersRef.current.find(
+              (u) => Number(u.id) === Number(payload.assignee_id),
+            ) || previous.assignee
+        }
+      }
+      queryClient.setQueryData(['task', id], next)
+
+      const projectKey = fromProject || previous.project_key
+      if (projectKey) {
+        patchTaskOnBoards(queryClient, {
+          workspaceSlug,
+          projectKey,
+          taskId: id,
+          patch: {
+            title: next.title,
+            priority: next.priority,
+            assignee: next.assignee,
+            description: next.description,
+          },
+        })
+      }
+      return { previous }
+    },
+    onSuccess: (data) => {
+      queryClient.setQueryData(['task', id], data)
+      syncBoardFromTask(data)
+      if (tab === 'history') {
+        queryClient.invalidateQueries({ queryKey: ['history', id] })
+      }
+    },
+    onError: (err, _payload, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(['task', id], context.previous)
+        syncBoardFromTask(context.previous)
+      }
       if (err.response?.status === 409) {
         toast.error('This issue changed. Reload?', {
           action: {
@@ -71,17 +137,24 @@ export function TaskDetailPage() {
   })
 
   const transitionMutation = useMutation({
-    mutationFn: (transitionId) =>
-      applyIssueTransition(id, {
+    mutationFn: (transitionId) => {
+      const current = queryClient.getQueryData(['task', id])
+      return applyIssueTransition(id, {
         transition_id: transitionId,
-        version: taskQuery.data?.version,
-      }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['task', id] })
+        version: current?.version,
+      })
+    },
+    onSuccess: (data) => {
+      if (data && typeof data === 'object' && data.id) {
+        queryClient.setQueryData(['task', id], data)
+        syncBoardFromTask(data)
+      } else {
+        queryClient.invalidateQueries({ queryKey: ['task', id] })
+      }
       queryClient.invalidateQueries({ queryKey: ['transitions', id] })
-      queryClient.invalidateQueries({ queryKey: ['board'] })
-      queryClient.invalidateQueries({ queryKey: ['history', id] })
-      toast.success('Status updated')
+      if (tab === 'history') {
+        queryClient.invalidateQueries({ queryKey: ['history', id] })
+      }
     },
     onError: (err) => {
       const detail =
@@ -123,6 +196,17 @@ export function TaskDetailPage() {
   const comments = unwrapList(commentsQuery.data)
   const transitions = unwrapList(transitionsQuery.data)
   const history = unwrapList(historyQuery.data)
+  const assignees = unwrapList(membersQuery.data)
+    .filter((m) => m.status === 'active' && m.user?.id != null)
+    .map((m) => m.user)
+  // Keep current assignee visible even if membership list is stale/pending.
+  if (
+    task?.assignee?.id != null &&
+    !assignees.some((u) => u.id === task.assignee.id)
+  ) {
+    assignees.unshift(task.assignee)
+  }
+  membersRef.current = assignees
 
   return (
     <div className="fixed inset-0 z-40 flex justify-end bg-ink/40">
@@ -211,9 +295,32 @@ export function TaskDetailPage() {
                   </p>
                 </Field>
                 <Field label="Assignee">
-                  <p className="text-sm text-ink">
-                    {task.assignee?.full_name || 'Unassigned'}
-                  </p>
+                  <select
+                    className="w-full rounded-md border border-border bg-paper px-2 py-1.5 text-sm"
+                    aria-label="Assignee"
+                    value={task.assignee?.id ?? ''}
+                    disabled={membersQuery.isLoading}
+                    onChange={(e) => {
+                      const next = e.target.value
+                      const current = task.assignee?.id ?? ''
+                      if (String(next) === String(current)) return
+                      updateMutation.mutate({
+                        assignee_id: next === '' ? null : Number(next),
+                      })
+                    }}
+                  >
+                    <option value="">Unassigned</option>
+                    {assignees.map((user) => (
+                      <option key={user.id} value={user.id}>
+                        {user.full_name || user.email}
+                      </option>
+                    ))}
+                  </select>
+                  {membersQuery.isError ? (
+                    <p className="mt-1 text-xs text-red-700">
+                      Could not load workspace members.
+                    </p>
+                  ) : null}
                 </Field>
               </div>
 

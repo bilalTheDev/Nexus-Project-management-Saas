@@ -7,6 +7,7 @@ import { ProtectedRoute } from '@/components/ProtectedRoute'
 import { AppShell } from '@/features/workspaces/AppShell'
 import { WorkspaceCreatePage } from '@/features/workspaces/WorkspaceCreatePage'
 import { MembersPage } from '@/features/workspaces/MembersPage'
+import { InviteAcceptPage } from '@/features/workspaces/InviteAcceptPage'
 import { SettingsPage } from '@/features/workspaces/SettingsPage'
 import { OverviewPage } from '@/features/dashboard/OverviewPage'
 import { ProjectsPage } from '@/features/projects/ProjectsPage'
@@ -32,6 +33,7 @@ export default function App() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/signup" element={<SignupPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/invite/:token" element={<InviteAcceptPage />} />
       <Route path="/app" element={<AppHomeRedirect />} />
       <Route path="/app/workspaces/new" element={<WorkspaceCreatePage />} />
       <Route

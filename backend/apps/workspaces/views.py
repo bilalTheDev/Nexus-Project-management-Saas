@@ -12,7 +12,12 @@ from apps.activity.models import ActivityEvent
 from apps.activity.services import log_activity
 from apps.projects.models import Project
 from apps.tasks.models import Task
-from apps.workspaces.models import Workspace, WorkspaceMembership
+from apps.workspaces.invites import (
+    accept_invite,
+    create_or_refresh_invite,
+    send_invite_email,
+)
+from apps.workspaces.models import Workspace, WorkspaceInvite, WorkspaceMembership
 from apps.workspaces.mixins import WorkspaceScopedMixin
 from apps.workspaces.permissions import (
     HasWorkspaceRole,
@@ -23,9 +28,14 @@ from apps.workspaces.serializers import (
     MembershipSerializer,
     OwnershipTransferSerializer,
     WorkspaceCreateSerializer,
+    WorkspaceInviteSerializer,
     WorkspaceSerializer,
 )
 from apps.workspaces.services import soft_remove_membership, transfer_ownership
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
 
 
 class WorkspaceListCreateView(generics.ListCreateAPIView):
@@ -232,22 +242,56 @@ class MembershipListCreateView(WorkspaceScopedMixin, generics.ListCreateAPIView)
         ctx["workspace"] = self.workspace
         return ctx
 
-    def perform_create(self, serializer):
-        membership = serializer.save()
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        email = (serializer.validated_data.get("email") or "").lower().strip()
+        role = serializer.validated_data.get(
+            "role", WorkspaceMembership.Role.MEMBER
+        )
+        invite = create_or_refresh_invite(
+            workspace=self.workspace,
+            email=email,
+            role=role,
+            invited_by=request.user,
+        )
+        email_sent = send_invite_email(invite=invite)
+
+        # Existing accounts get a PENDING membership so Members → Pending shows them.
+        existing_user = User.objects.filter(email__iexact=email).first()
+        if existing_user:
+            WorkspaceMembership.objects.update_or_create(
+                workspace=self.workspace,
+                user=existing_user,
+                defaults={
+                    "role": role,
+                    "status": WorkspaceMembership.Status.PENDING,
+                },
+            )
+
         log_activity(
             workspace=self.workspace,
             event_type=ActivityEvent.EventType.MEMBER_ADDED,
-            actor=self.request.user,
-            summary=f"Added {membership.user.email} as {membership.role}",
-            metadata={"role": membership.role},
+            actor=request.user,
+            summary=f"Invited {email} as {role}",
+            metadata={"role": role, "email_sent": email_sent},
         )
         from apps.accounts.onboarding import get_or_create_onboarding
 
-        onboarding = get_or_create_onboarding(self.request.user, self.workspace)
+        onboarding = get_or_create_onboarding(request.user, self.workspace)
         checklist = dict(onboarding.checklist or {})
         checklist["invite_teammate"] = True
         onboarding.checklist = checklist
         onboarding.save(update_fields=["checklist", "updated_at"])
+
+        payload = WorkspaceInviteSerializer(invite).data
+        payload["email_sent"] = email_sent
+        payload["detail"] = (
+            "Invite email sent."
+            if email_sent
+            else "Invite created. Email was not delivered — copy the invite link."
+        )
+        return Response(payload, status=status.HTTP_201_CREATED)
 
 
 class MembershipDetailView(WorkspaceScopedMixin, generics.RetrieveUpdateDestroyAPIView):
@@ -312,7 +356,14 @@ class MembershipStatsView(WorkspaceScopedMixin, APIView):
             status=WorkspaceMembership.Status.REMOVED
         )
         active = members.filter(status=WorkspaceMembership.Status.ACTIVE).count()
-        pending = members.filter(status=WorkspaceMembership.Status.PENDING).count()
+        pending_members = members.filter(
+            status=WorkspaceMembership.Status.PENDING
+        ).count()
+        open_invites = WorkspaceInvite.objects.filter(
+            workspace=self.workspace,
+            accepted_at__isnull=True,
+            expires_at__gt=timezone.now(),
+        ).count()
         admins = members.filter(
             status=WorkspaceMembership.Status.ACTIVE,
             role__in=[
@@ -325,7 +376,7 @@ class MembershipStatsView(WorkspaceScopedMixin, APIView):
                 "active_seats": active,
                 "seat_limit": 12,
                 "workspace_admins": admins,
-                "pending_invites": pending,
+                "pending_invites": max(pending_members, open_invites),
                 "security_tier": "2FA Enforced",
             }
         )
@@ -349,4 +400,65 @@ class OwnershipTransferView(WorkspaceScopedMixin, APIView):
         )
         return Response(
             {"detail": "Ownership transferred.", "owner": target.user.email}
+        )
+
+
+class InvitePreviewView(APIView):
+    """Public preview of an invite link (no auth)."""
+
+    permission_classes = [AllowAny]
+    throttle_scope = "auth"
+
+    def get(self, request, token, *args, **kwargs):
+        invite = (
+            WorkspaceInvite.objects.select_related("workspace", "invited_by")
+            .filter(token=token)
+            .first()
+        )
+        if invite is None or not invite.is_open:
+            return Response(
+                {"detail": "This invite is invalid or has expired."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        return Response(
+            {
+                "email": invite.email,
+                "role": invite.role,
+                "workspace_name": invite.workspace.name,
+                "workspace_slug": invite.workspace.slug,
+                "expires_at": invite.expires_at,
+                "invited_by": (
+                    invite.invited_by.get_full_name()
+                    or invite.invited_by.email
+                    if invite.invited_by
+                    else None
+                ),
+                "account_exists": User.objects.filter(
+                    email__iexact=invite.email
+                ).exists(),
+            }
+        )
+
+
+class InviteAcceptView(APIView):
+    """Accept an invite while authenticated as the invitee email."""
+
+    permission_classes = [IsAuthenticated]
+    throttle_scope = "auth"
+
+    def post(self, request, token, *args, **kwargs):
+        membership = accept_invite(token=token, user=request.user)
+        log_activity(
+            workspace=membership.workspace,
+            event_type=ActivityEvent.EventType.MEMBER_ADDED,
+            actor=request.user,
+            summary=f"{request.user.email} accepted invite as {membership.role}",
+            metadata={"role": membership.role, "via": "invite_link"},
+        )
+        return Response(
+            {
+                "detail": "Invite accepted.",
+                "workspace_slug": membership.workspace.slug,
+                "role": membership.role,
+            }
         )

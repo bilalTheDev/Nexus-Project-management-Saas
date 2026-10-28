@@ -4,7 +4,7 @@ from django.utils.text import slugify
 from rest_framework import serializers
 
 from apps.accounts.serializers import UserSerializer
-from apps.workspaces.models import Workspace, WorkspaceMembership
+from apps.workspaces.models import Workspace, WorkspaceInvite, WorkspaceMembership
 from apps.workspaces.permissions import ADMIN_ROLES
 from config.serializers import StrictFieldsMixin
 
@@ -115,7 +115,7 @@ class WorkspaceCreateSerializer(StrictFieldsMixin, serializers.Serializer):
 
 class MembershipSerializer(StrictFieldsMixin, serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
-    email = serializers.EmailField(write_only=True, required=False)
+    email = serializers.EmailField(write_only=True, required=True)
     project_access_count = serializers.SerializerMethodField()
 
     class Meta:
@@ -139,6 +139,9 @@ class MembershipSerializer(StrictFieldsMixin, serializers.ModelSerializer):
             return total
         return total
 
+    def validate_email(self, value):
+        return (value or "").lower().strip()
+
     def validate_role(self, value):
         if value == WorkspaceMembership.Role.OWNER:
             raise serializers.ValidationError(
@@ -146,37 +149,31 @@ class MembershipSerializer(StrictFieldsMixin, serializers.ModelSerializer):
             )
         return value
 
-    def create(self, validated_data):
-        workspace = self.context["workspace"]
-        email = (validated_data.pop("email", "") or "").lower().strip()
-        if not email:
-            raise serializers.ValidationError({"email": "Email is required."})
-        user = User.objects.filter(email__iexact=email).first()
-        if user is None:
-            raise serializers.ValidationError(
-                {"email": "No registered account exists for this email."}
-            )
-        existing = WorkspaceMembership.objects.filter(
-            workspace=workspace, user=user
-        ).first()
-        if existing and existing.status != WorkspaceMembership.Status.REMOVED:
-            raise serializers.ValidationError(
-                {"email": "This user is already a member of the workspace."}
-            )
-        role = validated_data.get("role", WorkspaceMembership.Role.MEMBER)
-        if existing:
-            existing.role = role
-            existing.status = WorkspaceMembership.Status.ACTIVE
-            existing.joined_at = timezone.now()
-            existing.save()
-            return existing
-        return WorkspaceMembership.objects.create(
-            workspace=workspace,
-            user=user,
-            role=role,
-            status=WorkspaceMembership.Status.ACTIVE,
-            joined_at=timezone.now(),
+
+class WorkspaceInviteSerializer(StrictFieldsMixin, serializers.ModelSerializer):
+    invite_url = serializers.SerializerMethodField()
+    workspace_name = serializers.CharField(source="workspace.name", read_only=True)
+    workspace_slug = serializers.CharField(source="workspace.slug", read_only=True)
+
+    class Meta:
+        model = WorkspaceInvite
+        fields = (
+            "id",
+            "email",
+            "role",
+            "created_at",
+            "expires_at",
+            "accepted_at",
+            "invite_url",
+            "workspace_name",
+            "workspace_slug",
         )
+        read_only_fields = fields
+
+    def get_invite_url(self, obj):
+        from apps.workspaces.invites import invite_frontend_url
+
+        return invite_frontend_url(obj.token)
 
 
 class MembershipRoleUpdateSerializer(StrictFieldsMixin, serializers.ModelSerializer):
