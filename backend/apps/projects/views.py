@@ -2,7 +2,7 @@ from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import generics, status
-from rest_framework.exceptions import PermissionDenied, ValidationError
+from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -279,14 +279,22 @@ class SprintStartView(WorkspaceScopedMixin, APIView):
     ]
     policy_action = "sprint.manage"
 
+    def get_project(self):
+        return get_object_or_404(
+            Project.objects.for_user(self.request.user),
+            workspace=self.workspace,
+            key__iexact=self.kwargs["project_key"],
+        )
+
     @transaction.atomic
     def post(self, request, *args, **kwargs):
-        project = get_object_or_404(
-            Project,
-            workspace=self.workspace,
-            key__iexact=kwargs["project_key"],
+        project = self.get_project()
+        self.project = project
+        sprint = get_object_or_404(
+            Sprint.objects.for_user(request.user),
+            project=project,
+            pk=kwargs["sprint_id"],
         )
-        sprint = get_object_or_404(Sprint, project=project, pk=kwargs["sprint_id"])
         if Sprint.objects.filter(project=project, status=Sprint.Status.ACTIVE).exists():
             raise ValidationError(
                 {"detail": "Only one active sprint is allowed per project."}
@@ -302,9 +310,9 @@ class SprintStartView(WorkspaceScopedMixin, APIView):
             sprint.end_date = request.data["end_date"]
 
         issues = list(
-            Task.objects.filter(sprint=sprint, archived_at__isnull=True).values(
-                "id", "story_points", "status", "number"
-            )
+            Task.objects.for_user(request.user)
+            .filter(sprint=sprint, archived_at__isnull=True)
+            .values("id", "story_points", "status", "number")
         )
         sprint.start_snapshot = {
             "issue_ids": [str(i["id"]) for i in issues],
@@ -325,16 +333,28 @@ class SprintStartView(WorkspaceScopedMixin, APIView):
 
 
 class SprintCompleteView(WorkspaceScopedMixin, APIView):
-    permission_classes = [IsWorkspaceMember, CanMutateWorkspaceContent]
+    permission_classes = [
+        IsWorkspaceMember,
+        HasProjectRole(ProjectMembership.Role.ADMIN),
+    ]
+    policy_action = "sprint.manage"
+
+    def get_project(self):
+        return get_object_or_404(
+            Project.objects.for_user(self.request.user),
+            workspace=self.workspace,
+            key__iexact=self.kwargs["project_key"],
+        )
 
     @transaction.atomic
     def post(self, request, *args, **kwargs):
-        project = get_object_or_404(
-            Project,
-            workspace=self.workspace,
-            key__iexact=kwargs["project_key"],
+        project = self.get_project()
+        self.project = project
+        sprint = get_object_or_404(
+            Sprint.objects.for_user(request.user),
+            project=project,
+            pk=kwargs["sprint_id"],
         )
-        sprint = get_object_or_404(Sprint, project=project, pk=kwargs["sprint_id"])
         if sprint.status != Sprint.Status.ACTIVE:
             raise ValidationError({"detail": "Only the active sprint can be completed."})
 

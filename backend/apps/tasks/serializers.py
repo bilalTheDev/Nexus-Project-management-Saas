@@ -112,7 +112,12 @@ class TaskCreateSerializer(StrictFieldsMixin, serializers.ModelSerializer):
         )
 
     def validate(self, attrs):
+        from apps.workspaces.validators import validate_same_workspace_fks
+
         project = self.context["project"]
+        attrs = validate_same_workspace_fks(
+            attrs, {**self.context, "workspace": project.workspace}, project=project
+        )
         issue_type_id = attrs.get("issue_type_id")
         parent_id = attrs.get("parent_id")
         issue_type = None
@@ -218,6 +223,7 @@ class TaskCreateSerializer(StrictFieldsMixin, serializers.ModelSerializer):
 
 
 class TaskUpdateSerializer(StrictFieldsMixin, serializers.ModelSerializer):
+    # User PK is BigAutoField (int); issue/sprint PKs are UUIDs.
     assignee_id = serializers.IntegerField(required=False, allow_null=True)
     reporter_id = serializers.IntegerField(required=False, allow_null=True)
     issue_type_id = serializers.UUIDField(required=False, allow_null=True)
@@ -243,6 +249,14 @@ class TaskUpdateSerializer(StrictFieldsMixin, serializers.ModelSerializer):
             "resolution",
             "rank",
             "version",
+        )
+
+    def validate(self, attrs):
+        from apps.workspaces.validators import validate_same_workspace_fks
+
+        project = self.instance.project
+        return validate_same_workspace_fks(
+            attrs, {**self.context, "workspace": project.workspace}, project=project
         )
 
     def update(self, instance, validated_data):

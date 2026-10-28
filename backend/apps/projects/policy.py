@@ -64,27 +64,33 @@ def can(
     workspace_role: str,
     project_role: str | None = None,
 ) -> bool:
-    """Return whether the given roles may perform ``action`` per POLICY."""
+    """
+    Return whether the given roles may perform ``action`` per POLICY.
+
+    Semantics:
+    - ``workspace.owner`` requires the owner role exclusively.
+    - Workspace OWNER/ADMIN may perform every other action.
+    - Otherwise allow if workspace rank meets ``min_ws`` **or** (when a
+      project role is present) project rank meets ``min_pr``.
+    - When ``min_pr`` is None, only the workspace rank applies.
+    - When no project role is supplied, workspace rank alone must meet
+      ``min_ws`` (project-admin gates fall back to workspace PM+).
+    """
     if action not in POLICY:
         return False
     min_ws, min_pr = POLICY[action]
     ws = WS_RANK.get(workspace_role, 0)
-    if workspace_role in ADMIN_ROLES and action != "workspace.owner":
-        if min_ws == WorkspaceMembership.Role.OWNER:
-            return workspace_role == WorkspaceMembership.Role.OWNER
+    if action == "workspace.owner":
+        return workspace_role == WorkspaceMembership.Role.OWNER
+    if workspace_role in ADMIN_ROLES:
         return True
-    if ws < WS_RANK.get(min_ws, 99):
-        return False
+    ok_ws = ws >= WS_RANK.get(min_ws, 99)
     if min_pr is None:
-        return True
+        return ok_ws
     if project_role is None:
-        if min_pr == ProjectMembership.Role.VIEWER:
-            return True
-        if min_pr == ProjectMembership.Role.MEMBER:
-            return workspace_role in MUTATING_ROLES
-        return ws >= WS_RANK.get(WorkspaceMembership.Role.PROJECT_MANAGER, 99)
-    pr = PR_RANK.get(project_role, 0)
-    return pr >= PR_RANK.get(min_pr, 99)
+        return ok_ws
+    ok_pr = PR_RANK.get(project_role, 0) >= PR_RANK.get(min_pr, 99)
+    return ok_ws or ok_pr
 
 
 def effective_permissions(*, workspace_role: str, project_role: str | None = None) -> dict:

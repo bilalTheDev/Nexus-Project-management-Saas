@@ -20,7 +20,9 @@ class ActivityFeedView(WorkspaceScopedMixin, ListAPIView):
 
     def get_queryset(self):
         qs = (
-            ActivityEvent.objects.filter(workspace=self.workspace)
+            ActivityEvent.objects.for_user(self.request.user).filter(
+                workspace=self.workspace
+            )
             .select_related("actor", "project", "task", "task__project")
             .order_by("-created_at")
         )
@@ -51,7 +53,9 @@ class ActivityStatsView(WorkspaceScopedMixin, APIView):
 
     def get(self, request, *args, **kwargs):
         week_ago = timezone.now() - timedelta(days=7)
-        events = ActivityEvent.objects.filter(workspace=self.workspace)
+        events = ActivityEvent.objects.for_user(request.user).filter(
+            workspace=self.workspace
+        )
         week_count = events.filter(created_at__gte=week_ago).count()
         contributors = (
             events.filter(created_at__gte=week_ago, actor__isnull=False)

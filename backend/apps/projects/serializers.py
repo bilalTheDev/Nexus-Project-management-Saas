@@ -114,6 +114,16 @@ class ProjectSerializer(StrictFieldsMixin, serializers.ModelSerializer):
             raise serializers.ValidationError("Project key must be 2–16 characters.")
         return key
 
+    def validate(self, attrs):
+        from apps.workspaces.validators import validate_same_workspace_fks
+
+        workspace = self.instance.workspace if self.instance else self.context.get(
+            "workspace"
+        )
+        return validate_same_workspace_fks(
+            attrs, {**self.context, "workspace": workspace}
+        )
+
     def update(self, instance, validated_data):
         if "lead_id" in validated_data:
             instance.lead_id = validated_data.pop("lead_id")
@@ -156,6 +166,11 @@ class ProjectCreateSerializer(StrictFieldsMixin, serializers.ModelSerializer):
         if get_template(key) is None:
             raise serializers.ValidationError("Unknown project template.")
         return key
+
+    def validate(self, attrs):
+        from apps.workspaces.validators import validate_same_workspace_fks
+
+        return validate_same_workspace_fks(attrs, self.context)
 
     def create(self, validated_data):
         lead_id = validated_data.pop("lead_id", None)
@@ -233,6 +248,7 @@ class SprintSerializer(StrictFieldsMixin, serializers.ModelSerializer):
             "updated_at",
         )
         read_only_fields = (
+            "id",
             "status",
             "started_at",
             "completed_at",

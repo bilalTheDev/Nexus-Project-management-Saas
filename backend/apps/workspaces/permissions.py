@@ -147,18 +147,25 @@ def HasProjectRole(min_role: str):
             view.membership = membership
             if membership is None:
                 return False
-            if membership.role in ADMIN_ROLES:
-                return True
 
+            from django.http import Http404
+
+            from apps.projects.policy import get_project_role
+
+            # Resolve project before role short-circuits so foreign project keys
+            # under a valid workspace slug still 404 (IDOR).
             project = getattr(view, "project", None)
             if project is None and hasattr(view, "get_project"):
                 try:
                     project = view.get_project()
                     view.project = project
+                except Http404:
+                    raise
                 except Exception:
                     project = None
 
-            from apps.projects.policy import get_project_role
+            if membership.role in ADMIN_ROLES:
+                return True
 
             action = getattr(view, "policy_action", None)
             if action:
