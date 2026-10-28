@@ -83,8 +83,9 @@ class TaskDetailSerializer(TaskListSerializer):
 
 
 class TaskCreateSerializer(serializers.ModelSerializer):
-    assignee_id = serializers.UUIDField(required=False, allow_null=True)
-    reporter_id = serializers.UUIDField(required=False, allow_null=True)
+    # User PK is BigAutoField; issue/sprint/status PKs are UUIDs.
+    assignee_id = serializers.IntegerField(required=False, allow_null=True)
+    reporter_id = serializers.IntegerField(required=False, allow_null=True)
     issue_type_id = serializers.UUIDField(required=False, allow_null=True)
     parent_id = serializers.UUIDField(required=False, allow_null=True)
     sprint_id = serializers.UUIDField(required=False, allow_null=True)
@@ -216,8 +217,8 @@ class TaskCreateSerializer(serializers.ModelSerializer):
 
 
 class TaskUpdateSerializer(serializers.ModelSerializer):
-    assignee_id = serializers.UUIDField(required=False, allow_null=True)
-    reporter_id = serializers.UUIDField(required=False, allow_null=True)
+    assignee_id = serializers.IntegerField(required=False, allow_null=True)
+    reporter_id = serializers.IntegerField(required=False, allow_null=True)
     issue_type_id = serializers.UUIDField(required=False, allow_null=True)
     parent_id = serializers.UUIDField(required=False, allow_null=True)
     sprint_id = serializers.UUIDField(required=False, allow_null=True)

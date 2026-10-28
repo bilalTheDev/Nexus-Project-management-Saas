@@ -10,9 +10,10 @@ from apps.tasks.models import Task
 
 class ProjectSerializer(serializers.ModelSerializer):
     lead = UserSerializer(read_only=True)
-    lead_id = serializers.UUIDField(write_only=True, required=False, allow_null=True)
+    # User PK is BigAutoField (int), not UUID.
+    lead_id = serializers.IntegerField(write_only=True, required=False, allow_null=True)
     default_assignee = UserSerializer(read_only=True)
-    default_assignee_id = serializers.UUIDField(
+    default_assignee_id = serializers.IntegerField(
         write_only=True, required=False, allow_null=True
     )
     progress = serializers.SerializerMethodField()
@@ -121,8 +122,8 @@ class ProjectSerializer(serializers.ModelSerializer):
 
 
 class ProjectCreateSerializer(serializers.ModelSerializer):
-    lead_id = serializers.UUIDField(required=False, allow_null=True)
-    default_assignee_id = serializers.UUIDField(required=False, allow_null=True)
+    lead_id = serializers.IntegerField(required=False, allow_null=True)
+    default_assignee_id = serializers.IntegerField(required=False, allow_null=True)
     template_key = serializers.CharField(required=False, default="scrum")
 
     class Meta:

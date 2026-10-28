@@ -73,11 +73,19 @@ export function ProjectCreatePage() {
     },
     onError: (err) => {
       const detail = err.response?.data
+      const firstFieldError = detail
+        ? Object.values(detail).flat().find((v) => typeof v === 'string')
+        : null
       setError(
         detail?.key?.[0] ||
           detail?.name?.[0] ||
+          detail?.lead_id?.[0] ||
+          detail?.default_assignee_id?.[0] ||
           detail?.detail ||
-          'Could not create project.',
+          firstFieldError ||
+          (!err.response
+            ? 'Cannot reach the API. Is the backend running?'
+            : 'Could not create project.'),
       )
     },
   })
