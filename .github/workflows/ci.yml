@@ -29,6 +29,12 @@ jobs:
     defaults:
       run:
         working-directory: backend
+    env:
+      # Ephemeral SQLite only — never depend on Neon credentials in CI.
+      DJANGO_SECRET_KEY: ci-only-django-secret-key-not-for-production-use
+      DJANGO_DEBUG: "True"
+      DATABASE_URL: ""
+      DATABASE_URL_UNPOOLED: ""
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -37,5 +43,11 @@ jobs:
           cache: pip
           cache-dependency-path: backend/requirements.txt
       - run: pip install -r requirements.txt
-      - run: python manage.py check
-      - run: python manage.py migrate --check
+      - name: Django system check
+        run: python manage.py check
+      - name: Ensure model changes have migrations
+        run: python manage.py makemigrations --check --dry-run
+      - name: Apply migrations (SQLite in CI)
+        run: python manage.py migrate --noinput
+      - name: Run backend tests
+        run: python manage.py test --verbosity=1
