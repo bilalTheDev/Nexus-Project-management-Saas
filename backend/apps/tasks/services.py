@@ -174,6 +174,31 @@ def apply_transition(
         summary=f"Transitioned {issue.issue_key} via {transition.name}",
         metadata={"from": old_status, "to": issue.status, "transition": transition.name},
     )
+    if issue.assignee_id and issue.assignee_id != getattr(actor, "id", None):
+        from apps.projects.governance_models import Notification
+        from apps.projects.governance_views import notify_once
+
+        # Reload assignee if only id was present.
+        recipient = issue.assignee
+        if recipient is None and issue.assignee_id:
+            from django.contrib.auth import get_user_model
+
+            recipient = get_user_model().objects.filter(pk=issue.assignee_id).first()
+        if recipient is not None:
+            notify_once(
+                workspace=issue.project.workspace,
+                recipient=recipient,
+                actor=actor,
+                kind=Notification.Kind.STATUS_CHANGED,
+                title=f"{issue.issue_key} → {transition.to_status.name}",
+                body=issue.title,
+                link=(
+                    f"/app/{issue.project.workspace.slug}/issues/{issue.id}"
+                ),
+                dedupe_key=(
+                    f"status:{issue.id}:{old_status}:{issue.status}:{issue.version}"
+                ),
+            )
     return issue
 
 

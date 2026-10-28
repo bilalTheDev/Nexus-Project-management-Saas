@@ -24,7 +24,7 @@ class TaskCommentListCreateView(generics.ListCreateAPIView):
     def initial(self, request, *args, **kwargs):
         task = get_object_or_404(
             Task.objects.for_user(request.user).select_related(
-                "project", "project__workspace"
+                "project", "project__workspace", "assignee"
             ),
             pk=kwargs.get("task_id") or self.kwargs.get("task_id"),
             archived_at__isnull=True,
@@ -69,6 +69,23 @@ class TaskCommentListCreateView(generics.ListCreateAPIView):
             summary=f"Commented on {self.task.task_key}",
             metadata={"excerpt": comment.body[:120]},
         )
+        if (
+            self.task.assignee_id
+            and self.task.assignee_id != request.user.id
+        ):
+            from apps.projects.governance_models import Notification
+            from apps.projects.governance_views import notify_once
+
+            notify_once(
+                workspace=self.workspace,
+                recipient=self.task.assignee,
+                actor=request.user,
+                kind=Notification.Kind.COMMENT,
+                title=f"Comment on {self.task.issue_key}",
+                body=comment.body[:200],
+                link=f"/app/{self.workspace.slug}/issues/{self.task.id}",
+                dedupe_key=f"comment:{comment.id}",
+            )
         return Response(CommentSerializer(comment).data, status=status.HTTP_201_CREATED)
 
 

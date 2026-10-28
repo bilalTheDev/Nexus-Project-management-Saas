@@ -312,6 +312,20 @@ class TaskDetailView(TaskScopedMixin, generics.RetrieveUpdateAPIView):
                 task=updated,
                 summary=f"Reassigned {updated.issue_key}",
             )
+            if updated.assignee_id and updated.assignee_id != request.user.id:
+                from apps.projects.governance_models import Notification
+                from apps.projects.governance_views import notify_once
+
+                notify_once(
+                    workspace=self.workspace,
+                    recipient=updated.assignee,
+                    actor=request.user,
+                    kind=Notification.Kind.ASSIGNED,
+                    title=f"Assigned {updated.issue_key}",
+                    body=updated.title,
+                    link=f"/app/{self.workspace.slug}/issues/{updated.id}",
+                    dedupe_key=f"assigned:{updated.id}:{updated.assignee_id}:{updated.version}",
+                )
         else:
             log_activity(
                 workspace=self.workspace,
