@@ -1,11 +1,10 @@
-# fly.toml app configuration file generated for nexus-project-management-saas on 2026-10-29T10:57:17Z
+# fly.toml app configuration file for nexus-project-management-saas
 #
-# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
-#
+# See https://fly.io/docs/reference/configuration/
 
 app = 'nexus-project-management-saas'
 primary_region = 'sin'
-console_command = '/code/manage.py shell'
+console_command = '/app/manage.py shell'
 
 [build]
 
@@ -13,10 +12,10 @@ console_command = '/code/manage.py shell'
   release_command = 'python manage.py migrate --noinput'
 
 [env]
-  PORT = '8000'
+  PORT = '8080'
 
 [http_service]
-  internal_port = 8000
+  internal_port = 8080
   force_https = true
   auto_stop_machines = 'stop'
   auto_start_machines = true
@@ -26,7 +25,3 @@ console_command = '/code/manage.py shell'
 [[vm]]
   size = 'shared-cpu-1x'
   memory = '512mb'
-
-[[statics]]
-  guest_path = '/code/static'
-  url_prefix = '/static/'

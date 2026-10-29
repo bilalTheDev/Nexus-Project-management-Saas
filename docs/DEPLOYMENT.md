@@ -74,11 +74,11 @@ Neon continuous backups support point-in-time recovery (plan-dependent):
 ## Backend (Fly.io)
 
 - Working directory: `backend/`
-- Build: `Dockerfile` (gunicorn on port `8080`)
-- Config: `fly.toml`
+- Build: `Dockerfile` (gunicorn binds `$PORT`, default `8080`)
+- Config: `fly.toml` — `internal_port` **must** match gunicorn/`PORT` (8080)
 - Do **not** create Fly Managed Postgres — use Neon
-- Secrets / env: see production checklist above
-- One-off migrate: `fly ssh console -C "python manage.py migrate"` (unpooled URL for migrate)
+- Secrets / env: see production checklist above; `SECURE_PROXY_SSL_HEADER_ENABLED=True` required
+- Release: `python manage.py migrate --noinput` (set `DATABASE_URL_UNPOOLED` for migrate reliability)
 - Public URL: `https://<app>.fly.dev` → `DJANGO_ALLOWED_HOSTS` and Vercel `VITE_API_BASE_URL`
 
 See also `docs/RUNBOOK.md` for health / restore notes.

@@ -17,4 +17,5 @@ COPY . .
 
 EXPOSE 8080
 
-CMD gunicorn config.wsgi:application --bind 0.0.0.0:8080 --workers 1 --threads 2 --timeout 120
+# Honor Fly/Railway $PORT (default 8080). Must match fly.toml http_service.internal_port.
+CMD ["sh", "-c", "gunicorn config.wsgi:application --bind 0.0.0.0:${PORT:-8080} --workers 1 --threads 2 --timeout 120"]
