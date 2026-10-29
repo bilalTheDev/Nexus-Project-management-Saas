@@ -10,4 +10,4 @@ psycopg[binary]==3.3.6
 python-dotenv==1.2.4
 dj-database-url==3.1.2
 gunicorn==23.0.0
-sentry-sdk==2.35.0
+sentry-sdk==2.73.0
