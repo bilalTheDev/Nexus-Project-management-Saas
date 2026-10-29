@@ -1,13 +1,13 @@
 # Deployment
 
-Target stack: **Vercel** (frontend) · **PythonAnywhere** (Django) · **Neon** (PostgreSQL).
+Target stack: **Vercel** (frontend) · **Fly.io** (Django) · **Neon** (PostgreSQL).
 
 ## Order of operations
 
 1. Create Neon database; store `DATABASE_URL` in backend-only secrets (SSL as required).
-2. Deploy Django on PythonAnywhere; configure WSGI, env vars, migrations, static files.
+2. Deploy Django on Fly.io (root `backend/`, `Dockerfile` + `fly.toml`); set secrets/env; run migrations.
 3. Verify `/healthz`, `/readyz`, and authenticated API smoke tests.
-4. Deploy Vite app on Vercel with root `frontend/` and `VITE_API_BASE_URL` pointing at the PythonAnywhere API.
+4. Deploy Vite app on Vercel with root `frontend/` and `VITE_API_BASE_URL` pointing at the Fly API.
 5. Confirm CORS, auth cookies/CSRF (when configured), CSP headers (`frontend/vercel.json`), and end-to-end journeys.
 
 ## Production settings checklist
@@ -15,9 +15,9 @@ Target stack: **Vercel** (frontend) · **PythonAnywhere** (Django) · **Neon** (
 - `DJANGO_DEBUG=False`
 - Strong unique `DJANGO_SECRET_KEY` (not `django-insecure-*`)
 - Separate `JWT_SIGNING_KEY`
-- `DJANGO_ALLOWED_HOSTS` = real PythonAnywhere host
+- `DJANGO_ALLOWED_HOSTS` = Fly host (e.g. `your-app.fly.dev` or your custom domain)
 - `CORS_ALLOWED_ORIGINS` / `CSRF_TRUSTED_ORIGINS` = real Vercel origin (never `*` with credentials)
-- `SECURE_PROXY_SSL_HEADER_ENABLED=True` **only** on PythonAnywhere (or hosts that strip client `X-Forwarded-Proto`) so `SECURE_SSL_REDIRECT` / secure cookies see HTTPS correctly
+- `SECURE_PROXY_SSL_HEADER_ENABLED=True` on Fly (sets `X-Forwarded-Proto`) so `SECURE_SSL_REDIRECT` / secure cookies see HTTPS correctly
 - Optional: `SENTRY_DSN` (Sentry init uses `send_default_pii=False` + scrubber)
 - Never put `DATABASE_URL` or Django secrets in frontend/`VITE_` variables
 
@@ -69,5 +69,16 @@ Neon continuous backups support point-in-time recovery (plan-dependent):
 - Project root: `frontend/`
 - Security headers (CSP `script-src 'self'`, `frame-ancestors 'none'`, `connect-src` including API hosts) live in `frontend/vercel.json`
 - After changing API origin, update CSP `connect-src` and redeploy
+- CSP already allows `https://*.fly.dev`
 
-Detailed PythonAnywhere reload and troubleshooting steps: see `docs/RUNBOOK.md`.
+## Backend (Fly.io)
+
+- Working directory: `backend/`
+- Build: `Dockerfile` (gunicorn on port `8080`)
+- Config: `fly.toml`
+- Do **not** create Fly Managed Postgres — use Neon
+- Secrets / env: see production checklist above
+- One-off migrate: `fly ssh console -C "python manage.py migrate"` (unpooled URL for migrate)
+- Public URL: `https://<app>.fly.dev` → `DJANGO_ALLOWED_HOSTS` and Vercel `VITE_API_BASE_URL`
+
+See also `docs/RUNBOOK.md` for health / restore notes.
